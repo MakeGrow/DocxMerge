@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DocxMerge\Tracking;
 
 use DOMDocument;
+use DOMXPath;
 use ZipArchive;
 
 /**
@@ -27,12 +28,16 @@ final class IdTracker
     /**
      * Initializes all counters by scanning the target ZIP and DOMs.
      *
+     * Scans relationship IDs, media files, header/footer files, drawing
+     * object properties, bookmark IDs, and numbering IDs to find the
+     * maximum existing value for each counter type.
+     *
      * @param ZipArchive $targetZip The target ZIP archive.
      * @param DOMDocument $relsDom The target document.xml.rels DOM.
      * @param DOMDocument $documentDom The target document.xml DOM.
      * @param DOMDocument|null $numberingDom The target numbering.xml DOM.
      *
-     * @return self Initialized tracker.
+     * @return self Initialized tracker with counters set to the max existing values.
      */
     public static function initializeFromTarget(
         ZipArchive $targetZip,
@@ -40,8 +45,226 @@ final class IdTracker
         DOMDocument $documentDom,
         ?DOMDocument $numberingDom,
     ): self {
-        // Stub -- real implementation in Phase 3
-        return new self();
+        $tracker = new self();
+
+        $tracker->scanRelationshipIds($relsDom);
+        $tracker->scanMediaFiles($targetZip);
+        $tracker->scanHeaderFooterFiles($targetZip);
+        $tracker->scanDocPrIds($documentDom);
+        $tracker->scanBookmarkIds($documentDom);
+
+        if ($numberingDom !== null) {
+            $tracker->scanNumberingIds($numberingDom);
+        }
+
+        return $tracker;
+    }
+
+    /**
+     * Scans the rels DOM for the highest rId numeric value.
+     *
+     * @param DOMDocument $relsDom The relationships DOM to scan.
+     */
+    private function scanRelationshipIds(DOMDocument $relsDom): void
+    {
+        $xpath = new DOMXPath($relsDom);
+        $xpath->registerNamespace(
+            'rel',
+            'http://schemas.openxmlformats.org/package/2006/relationships'
+        );
+
+        $nodes = $xpath->query('//rel:Relationship/@Id');
+
+        if ($nodes === false) {
+            return;
+        }
+
+        $max = 0;
+        foreach ($nodes as $node) {
+            $value = $node->nodeValue ?? '';
+            if (preg_match('/^rId(\d+)$/', $value, $matches) === 1) {
+                $num = (int) $matches[1];
+                if ($num > $max) {
+                    $max = $num;
+                }
+            }
+        }
+
+        $this->relationshipIdCounter = $max;
+    }
+
+    /**
+     * Scans the ZIP for the highest image number in word/media/.
+     *
+     * @param ZipArchive $targetZip The target ZIP archive.
+     */
+    private function scanMediaFiles(ZipArchive $targetZip): void
+    {
+        $entryNames = self::listZipEntries($targetZip);
+        $max = 0;
+
+        foreach ($entryNames as $name) {
+            if (preg_match('/^word\/media\/image(\d+)\./', $name, $matches) === 1) {
+                $num = (int) $matches[1];
+                if ($num > $max) {
+                    $max = $num;
+                }
+            }
+        }
+
+        $this->imageCounter = $max;
+    }
+
+    /**
+     * Scans the ZIP for the highest header/footer file number.
+     *
+     * @param ZipArchive $targetZip The target ZIP archive.
+     */
+    private function scanHeaderFooterFiles(ZipArchive $targetZip): void
+    {
+        $entryNames = self::listZipEntries($targetZip);
+        $max = 0;
+
+        foreach ($entryNames as $name) {
+            if (preg_match('/^word\/(?:header|footer)(\d+)\.xml$/', $name, $matches) === 1) {
+                $num = (int) $matches[1];
+                if ($num > $max) {
+                    $max = $num;
+                }
+            }
+        }
+
+        $this->headerFooterCounter = $max;
+    }
+
+    /**
+     * Lists all entry names in a ZIP archive safely.
+     *
+     * ZipArchive::count() throws ValueError when no archive is open,
+     * so this method catches that case and returns an empty list.
+     *
+     * @param ZipArchive $zip The ZIP archive to list.
+     *
+     * @return list<string> The entry names in the archive.
+     */
+    private static function listZipEntries(ZipArchive $zip): array
+    {
+        try {
+            $count = $zip->count();
+        } catch (\ValueError) {
+            // No archive is open -- nothing to scan.
+            return [];
+        }
+
+        $names = [];
+        for ($i = 0; $i < $count; $i++) {
+            $name = $zip->getNameIndex($i);
+            if ($name !== false) {
+                $names[] = $name;
+            }
+        }
+
+        return $names;
+    }
+
+    /**
+     * Scans the document DOM for the highest wp:docPr id value.
+     *
+     * @param DOMDocument $documentDom The document.xml DOM to scan.
+     */
+    private function scanDocPrIds(DOMDocument $documentDom): void
+    {
+        $xpath = new DOMXPath($documentDom);
+        $xpath->registerNamespace(
+            'wp',
+            'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing'
+        );
+
+        $nodes = $xpath->query('//wp:docPr/@id');
+
+        if ($nodes === false) {
+            return;
+        }
+
+        $max = 0;
+        foreach ($nodes as $node) {
+            $num = (int) ($node->nodeValue ?? '0');
+            if ($num > $max) {
+                $max = $num;
+            }
+        }
+
+        $this->docPrIdCounter = $max;
+    }
+
+    /**
+     * Scans the document DOM for the highest bookmark w:id value.
+     *
+     * @param DOMDocument $documentDom The document.xml DOM to scan.
+     */
+    private function scanBookmarkIds(DOMDocument $documentDom): void
+    {
+        $xpath = new DOMXPath($documentDom);
+        $xpath->registerNamespace(
+            'w',
+            'http://schemas.openxmlformats.org/wordprocessingml/2006/main'
+        );
+
+        $nodes = $xpath->query('//w:bookmarkStart/@w:id');
+
+        if ($nodes === false) {
+            return;
+        }
+
+        $max = 0;
+        foreach ($nodes as $node) {
+            $num = (int) ($node->nodeValue ?? '0');
+            if ($num > $max) {
+                $max = $num;
+            }
+        }
+
+        $this->bookmarkIdCounter = $max;
+    }
+
+    /**
+     * Scans the numbering DOM for the highest numId and abstractNumId values.
+     *
+     * @param DOMDocument $numberingDom The numbering.xml DOM to scan.
+     */
+    private function scanNumberingIds(DOMDocument $numberingDom): void
+    {
+        $xpath = new DOMXPath($numberingDom);
+        $xpath->registerNamespace(
+            'w',
+            'http://schemas.openxmlformats.org/wordprocessingml/2006/main'
+        );
+
+        // Scan w:num/@w:numId for max numId
+        $numNodes = $xpath->query('//w:num/@w:numId');
+        if ($numNodes !== false) {
+            $max = 0;
+            foreach ($numNodes as $node) {
+                $num = (int) ($node->nodeValue ?? '0');
+                if ($num > $max) {
+                    $max = $num;
+                }
+            }
+            $this->numIdCounter = $max;
+        }
+
+        // Scan w:abstractNum/@w:abstractNumId for max abstractNumId
+        $abstractNodes = $xpath->query('//w:abstractNum/@w:abstractNumId');
+        if ($abstractNodes !== false) {
+            $max = 0;
+            foreach ($abstractNodes as $node) {
+                $num = (int) ($node->nodeValue ?? '0');
+                if ($num > $max) {
+                    $max = $num;
+                }
+            }
+            $this->abstractNumIdCounter = $max;
+        }
     }
 
     /**

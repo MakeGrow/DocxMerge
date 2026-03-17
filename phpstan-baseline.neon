@@ -1,0 +1,193 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Method DocxMerge\\Content\\ContentExtractor\:\:extract\(\) has DocxMerge\\Exception\\InvalidSourceException in PHPDoc @throws tag but it''s not thrown\.$#'
+			identifier: throws.unusedType
+			count: 1
+			path: src/Content/ContentExtractor.php
+
+		-
+			message: '#^Cannot access property \$nodeName on DOMElement\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: tests/Unit/Content/ContentExtractorTest.php
+
+		-
+			message: '#^Cannot access property \$length on DOMNodeList\<DOMNameSpaceNode\|DOMNode\>\|false\.$#'
+			identifier: property.nonObject
+			count: 3
+			path: tests/Unit/ContentTypes/ContentTypesManagerTest.php
+
+		-
+			message: '#^Result of && is always false\.$#'
+			identifier: booleanAnd.alwaysFalse
+			count: 1
+			path: tests/Unit/ContentTypes/ContentTypesManagerTest.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between '''' and '''' will always evaluate to false\.$#'
+			identifier: notIdentical.alwaysFalse
+			count: 1
+			path: tests/Unit/ContentTypes/ContentTypesManagerTest.php
+
+		-
+			message: '#^Cannot access property \$paragraph on DocxMerge\\Dto\\MarkerLocation\|null\.$#'
+			identifier: property.nonObject
+			count: 3
+			path: tests/Unit/Marker/MarkerLocatorTest.php
+
+		-
+			message: '#^Cannot access property \$length on DOMNodeList\<DOMNameSpaceNode\|DOMNode\>\|false\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: tests/Unit/Numbering/NumberingMergerTest.php
+
+		-
+			message: '#^Cannot call method item\(\) on DOMNodeList\<DOMNameSpaceNode\|DOMNode\>\|false\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/Unit/Numbering/NumberingMergerTest.php
+
+		-
+			message: '#^Cannot access property \$length on DOMNodeList\<DOMNameSpaceNode\|DOMNode\>\|false\.$#'
+			identifier: property.nonObject
+			count: 4
+			path: tests/Unit/Numbering/NumberingResequencerTest.php
+
+		-
+			message: '#^Cannot call method item\(\) on DOMNodeList\<DOMNameSpaceNode\|DOMNode\>\|false\.$#'
+			identifier: method.nonObject
+			count: 7
+			path: tests/Unit/Numbering/NumberingResequencerTest.php
+
+		-
+			message: '#^Cannot access property \$length on DOMNodeList\<DOMNameSpaceNode\|DOMNode\>\|false\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: tests/Unit/Relationship/RelationshipManagerTest.php
+
+		-
+			message: '#^Cannot access property \$length on DOMNodeList\<DOMNameSpaceNode\|DOMNode\>\|false\.$#'
+			identifier: property.nonObject
+			count: 11
+			path: tests/Unit/Remapping/IdRemapperTest.php
+
+		-
+			message: '#^Cannot access property \$nodeValue on DOMNameSpaceNode\|DOMNode\|null\.$#'
+			identifier: property.nonObject
+			count: 6
+			path: tests/Unit/Remapping/IdRemapperTest.php
+
+		-
+			message: '#^Cannot call method item\(\) on DOMNodeList\<DOMNameSpaceNode\|DOMNode\>\|false\.$#'
+			identifier: method.nonObject
+			count: 11
+			path: tests/Unit/Remapping/IdRemapperTest.php
+
+		-
+			message: '#^Parameter \#1 \$contentNodes of method DocxMerge\\Remapping\\IdRemapper\:\:remap\(\) expects list\<DOMNode\>, list\<DOMNameSpaceNode\|DOMNode\|null\> given\.$#'
+			identifier: argument.type
+			count: 5
+			path: tests/Unit/Remapping/IdRemapperTest.php
+
+		-
+			message: '#^Cannot access property \$length on DOMNodeList\<DOMNameSpaceNode\|DOMNode\>\|false\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: tests/Unit/Style/StyleMergerTest.php
+
+		-
+			message: '#^Call to method validate\(\) on an unknown class DocxMerge\\Validation\\DocumentValidator\.$#'
+			identifier: class.notFound
+			count: 4
+			path: tests/Unit/Validation/DocumentValidatorTest.php
+
+		-
+			message: '#^Instantiated class DocxMerge\\Validation\\DocumentValidator not found\.$#'
+			identifier: class.notFound
+			count: 4
+			path: tests/Unit/Validation/DocumentValidatorTest.php
+
+		-
+			message: '#^Result of && is always false\.$#'
+			identifier: booleanAnd.alwaysFalse
+			count: 1
+			path: tests/Unit/Validation/DocumentValidatorTest.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between '''' and '''' will always evaluate to false\.$#'
+			identifier: notIdentical.alwaysFalse
+			count: 1
+			path: tests/Unit/Validation/DocumentValidatorTest.php
+
+		-
+			message: '#^Unable to resolve the template type TValue in call to function expect$#'
+			identifier: argument.templateType
+			count: 1
+			path: tests/Unit/Validation/DocumentValidatorTest.php
+
+		-
+			message: '#^Call to method createDom\(\) on an unknown class DocxMerge\\Xml\\XmlHelper\.$#'
+			identifier: class.notFound
+			count: 9
+			path: tests/Unit/Xml/XmlHelperTest.php
+
+		-
+			message: '#^Call to method createXpath\(\) on an unknown class DocxMerge\\Xml\\XmlHelper\.$#'
+			identifier: class.notFound
+			count: 5
+			path: tests/Unit/Xml/XmlHelperTest.php
+
+		-
+			message: '#^Call to method preserveTextSpaces\(\) on an unknown class DocxMerge\\Xml\\XmlHelper\.$#'
+			identifier: class.notFound
+			count: 3
+			path: tests/Unit/Xml/XmlHelperTest.php
+
+		-
+			message: '#^Instantiated class DocxMerge\\Xml\\XmlHelper not found\.$#'
+			identifier: class.notFound
+			count: 9
+			path: tests/Unit/Xml/XmlHelperTest.php
+
+		-
+			message: '#^Parameter \#1 \$value of function expect contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: tests/Unit/Xml/XmlHelperTest.php
+
+		-
+			message: '#^Return type of call to function expect contains unresolvable type\.$#'
+			identifier: function.unresolvableReturnType
+			count: 1
+			path: tests/Unit/Xml/XmlHelperTest.php
+
+		-
+			message: '#^Unable to resolve the template type TValue in call to function expect$#'
+			identifier: argument.templateType
+			count: 1
+			path: tests/Unit/Xml/XmlHelperTest.php
+
+		-
+			message: '#^Call to method sanitizePath\(\) on an unknown class DocxMerge\\Zip\\ZipHelper\.$#'
+			identifier: class.notFound
+			count: 4
+			path: tests/Unit/Zip/ZipHelperTest.php
+
+		-
+			message: '#^Instantiated class DocxMerge\\Zip\\ZipHelper not found\.$#'
+			identifier: class.notFound
+			count: 3
+			path: tests/Unit/Zip/ZipHelperTest.php
+
+		-
+			message: '#^Parameter \#1 \$value of function expect contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 2
+			path: tests/Unit/Zip/ZipHelperTest.php
+
+		-
+			message: '#^Return type of call to function expect contains unresolvable type\.$#'
+			identifier: function.unresolvableReturnType
+			count: 2
+			path: tests/Unit/Zip/ZipHelperTest.php

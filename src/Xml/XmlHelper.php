@@ -17,34 +17,34 @@ use DOMXPath;
 final class XmlHelper
 {
     /** WordprocessingML main namespace URI. */
-    private const NS_W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+    public const NS_W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 
     /** Office relationships namespace URI. */
-    private const NS_R = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+    public const NS_R = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
 
     /** DrawingML main namespace URI. */
-    private const NS_A = 'http://schemas.openxmlformats.org/drawingml/2006/main';
+    public const NS_A = 'http://schemas.openxmlformats.org/drawingml/2006/main';
 
     /** DrawingML picture namespace URI. */
-    private const NS_PIC = 'http://schemas.openxmlformats.org/drawingml/2006/picture';
+    public const NS_PIC = 'http://schemas.openxmlformats.org/drawingml/2006/picture';
 
     /** WordprocessingDrawing namespace URI. */
-    private const NS_WP = 'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing';
+    public const NS_WP = 'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing';
 
     /** Markup Compatibility namespace URI. */
-    private const NS_MC = 'http://schemas.openxmlformats.org/markup-compatibility/2006';
+    public const NS_MC = 'http://schemas.openxmlformats.org/markup-compatibility/2006';
 
     /** Word 2010 extensions namespace URI. */
-    private const NS_W14 = 'http://schemas.microsoft.com/office/word/2010/wordml';
+    public const NS_W14 = 'http://schemas.microsoft.com/office/word/2010/wordml';
 
     /** Package relationships namespace URI. */
-    private const NS_REL = 'http://schemas.openxmlformats.org/package/2006/relationships';
+    public const NS_REL = 'http://schemas.openxmlformats.org/package/2006/relationships';
 
     /** Content types namespace URI. */
-    private const NS_CT = 'http://schemas.openxmlformats.org/package/2006/content-types';
+    public const NS_CT = 'http://schemas.openxmlformats.org/package/2006/content-types';
 
     /** VML namespace URI. */
-    private const NS_V = 'urn:schemas-microsoft-com:vml';
+    public const NS_V = 'urn:schemas-microsoft-com:vml';
 
     /**
      * Creates a DOMDocument from an XML string with safe defaults.

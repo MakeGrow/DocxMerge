@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DocxMerge\Marker;
 
 use DocxMerge\Dto\MarkerLocation;
+use DocxMerge\Xml\XmlHelper;
 use DOMDocument;
 use DOMElement;
 use DOMXPath;
@@ -19,9 +20,6 @@ use DOMXPath;
  */
 final class MarkerLocator implements MarkerLocatorInterface
 {
-    /** WordprocessingML main namespace URI. */
-    private const NS_W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
-
     /**
      * Finds the paragraph element containing the given marker.
      *
@@ -41,7 +39,7 @@ final class MarkerLocator implements MarkerLocatorInterface
         string $markerPattern,
     ): ?MarkerLocation {
         $xpath = new DOMXPath($documentDom);
-        $xpath->registerNamespace('w', self::NS_W);
+        $xpath->registerNamespace('w', XmlHelper::NS_W);
 
         $paragraphs = $xpath->query('//w:p');
 

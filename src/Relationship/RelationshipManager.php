@@ -7,6 +7,7 @@ namespace DocxMerge\Relationship;
 use DocxMerge\Dto\RelationshipMap;
 use DocxMerge\Dto\RelationshipMapping;
 use DocxMerge\Tracking\IdTracker;
+use DocxMerge\Xml\XmlHelper;
 use DOMDocument;
 use DOMElement;
 use DOMXPath;
@@ -23,9 +24,6 @@ use DOMXPath;
  */
 final class RelationshipManager implements RelationshipManagerInterface
 {
-    /** Package relationships namespace URI. */
-    private const NS_REL = 'http://schemas.openxmlformats.org/package/2006/relationships';
-
     /**
      * Relationship types that are structural and should never be duplicated.
      *
@@ -51,7 +49,18 @@ final class RelationshipManager implements RelationshipManagerInterface
     ];
 
     /**
-     * {@inheritdoc}
+     * Builds a mapping from source relationship IDs to new target IDs.
+     *
+     * Excludes structural and header/footer relationships. Filters to include
+     * only relationships actually referenced in the content. Detects duplicates
+     * by Type+Target combination to reuse existing target IDs.
+     *
+     * @param DOMDocument $sourceRelsDom The source document.xml.rels DOM.
+     * @param DOMDocument $targetRelsDom The target document.xml.rels DOM.
+     * @param string $contentXml The extracted content XML (to filter referenced rIds).
+     * @param IdTracker $idTracker Shared ID counters.
+     *
+     * @return RelationshipMap Mapping of old rIds to new rIds with metadata.
      */
     public function buildMap(
         DOMDocument $sourceRelsDom,
@@ -60,10 +69,10 @@ final class RelationshipManager implements RelationshipManagerInterface
         IdTracker $idTracker,
     ): RelationshipMap {
         $sourceXpath = new DOMXPath($sourceRelsDom);
-        $sourceXpath->registerNamespace('rel', self::NS_REL);
+        $sourceXpath->registerNamespace('rel', XmlHelper::NS_REL);
 
         $targetXpath = new DOMXPath($targetRelsDom);
-        $targetXpath->registerNamespace('rel', self::NS_REL);
+        $targetXpath->registerNamespace('rel', XmlHelper::NS_REL);
 
         // Build index of existing target relationships by Type+Target for duplicate detection
         $existingTargetRels = $this->buildTargetIndex($targetXpath);
@@ -138,7 +147,14 @@ final class RelationshipManager implements RelationshipManagerInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Adds new relationships to the target rels DOM.
+     *
+     * Skips relationships whose new rId already exists in the target to avoid
+     * duplicates. Creates Relationship elements in the package relationships
+     * namespace with TargetMode="External" when appropriate.
+     *
+     * @param DOMDocument $targetRelsDom The target rels DOM (modified in place).
+     * @param RelationshipMap $relationshipMap The computed relationship map.
      */
     public function addRelationships(
         DOMDocument $targetRelsDom,
@@ -151,7 +167,7 @@ final class RelationshipManager implements RelationshipManagerInterface
 
         // Build index of existing target rIds to avoid adding duplicates
         $targetXpath = new DOMXPath($targetRelsDom);
-        $targetXpath->registerNamespace('rel', self::NS_REL);
+        $targetXpath->registerNamespace('rel', XmlHelper::NS_REL);
         $existingIds = $this->extractExistingTargetIds($targetXpath);
 
         foreach ($relationshipMap->mappings as $mapping) {
@@ -160,7 +176,7 @@ final class RelationshipManager implements RelationshipManagerInterface
                 continue;
             }
 
-            $relElement = $targetRelsDom->createElementNS(self::NS_REL, 'Relationship');
+            $relElement = $targetRelsDom->createElementNS(XmlHelper::NS_REL, 'Relationship');
             $relElement->setAttribute('Id', $mapping->newId);
             $relElement->setAttribute('Type', $mapping->type);
             $relElement->setAttribute('Target', $mapping->newTarget);

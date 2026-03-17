@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DocxMerge\Numbering;
 
+use DocxMerge\Xml\XmlHelper;
 use DOMDocument;
 use DOMElement;
 use DOMXPath;
@@ -20,9 +21,6 @@ use DOMXPath;
  */
 final class NumberingResequencer implements NumberingResequencerInterface
 {
-    /** WordprocessingML main namespace URI. */
-    private const NS_W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
-
     /**
      * Renumbers all abstractNum and num IDs sequentially and enforces DOM ordering.
      *
@@ -41,10 +39,10 @@ final class NumberingResequencer implements NumberingResequencerInterface
         DOMDocument $documentDom,
     ): void {
         $numberingXpath = new DOMXPath($numberingDom);
-        $numberingXpath->registerNamespace('w', self::NS_W);
+        $numberingXpath->registerNamespace('w', XmlHelper::NS_W);
 
         $documentXpath = new DOMXPath($documentDom);
-        $documentXpath->registerNamespace('w', self::NS_W);
+        $documentXpath->registerNamespace('w', XmlHelper::NS_W);
 
         $root = $numberingDom->documentElement;
         if ($root === null) {
@@ -120,20 +118,20 @@ final class NumberingResequencer implements NumberingResequencerInterface
         // the WordprocessingML namespace. Using plain setAttribute would create a
         // duplicate non-namespaced attribute instead of updating the existing one.
         foreach ($abstractNums as $entry) {
-            $entry['element']->setAttributeNS(self::NS_W, 'w:abstractNumId', $abstractNumIdMap[$entry['oldId']]);
+            $entry['element']->setAttributeNS(XmlHelper::NS_W, 'w:abstractNumId', $abstractNumIdMap[$entry['oldId']]);
             $root->appendChild($entry['element']);
         }
 
         // num second, renumbered 1, 2, 3, ...
         /** @var array{element: DOMElement, oldId: string, oldAbstractNumIdRef: string} $entry */
         foreach ($nums as $entry) {
-            $entry['element']->setAttributeNS(self::NS_W, 'w:numId', $numIdMap[$entry['oldId']]);
+            $entry['element']->setAttributeNS(XmlHelper::NS_W, 'w:numId', $numIdMap[$entry['oldId']]);
 
             // Update w:abstractNumId reference inside each w:num
             if ($entry['oldAbstractNumIdRef'] !== '' && isset($abstractNumIdMap[$entry['oldAbstractNumIdRef']])) {
                 foreach ($entry['element']->childNodes as $child) {
                     if ($child instanceof DOMElement && $child->localName === 'abstractNumId') {
-                        $child->setAttributeNS(self::NS_W, 'w:val', $abstractNumIdMap[$entry['oldAbstractNumIdRef']]);
+                        $child->setAttributeNS(XmlHelper::NS_W, 'w:val', $abstractNumIdMap[$entry['oldAbstractNumIdRef']]);
                         break;
                     }
                 }
@@ -149,7 +147,7 @@ final class NumberingResequencer implements NumberingResequencerInterface
                 if ($docNumIdNode instanceof DOMElement) {
                     $oldVal = $docNumIdNode->getAttribute('w:val');
                     if (isset($numIdMap[$oldVal])) {
-                        $docNumIdNode->setAttributeNS(self::NS_W, 'w:val', $numIdMap[$oldVal]);
+                        $docNumIdNode->setAttributeNS(XmlHelper::NS_W, 'w:val', $numIdMap[$oldVal]);
                     }
                 }
             }

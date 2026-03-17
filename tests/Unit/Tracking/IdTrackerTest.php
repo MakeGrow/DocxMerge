@@ -114,6 +114,86 @@ describe('IdTracker', function (): void {
             // Assert -- next bookmark id should be 11
             expect($tracker->nextBookmarkId())->toBe(11);
         });
+        it('detects max image number from ZIP media files', function (): void {
+            // Arrange
+            $relsDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"/>'
+            );
+            $documentDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+                . '<w:body><w:sectPr/></w:body></w:document>'
+            );
+
+            // Create a temp ZIP with media files
+            $tempZipPath = tempnam(sys_get_temp_dir(), 'tracker_test_') . '.zip';
+            $zip = new ZipArchive();
+            $zip->open($tempZipPath, ZipArchive::CREATE);
+            $zip->addFromString('word/media/image1.png', 'fake');
+            $zip->addFromString('word/media/image3.png', 'fake');
+            $zip->close();
+            $zip->open($tempZipPath);
+
+            // Act
+            $tracker = IdTracker::initializeFromTarget($zip, $relsDom, $documentDom, null);
+            $zip->close();
+            unlink($tempZipPath);
+
+            // Assert -- next image number should be 4 (max was 3)
+            expect($tracker->nextImageNumber())->toBe(4);
+        });
+
+        it('detects max header/footer number from ZIP', function (): void {
+            // Arrange
+            $relsDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"/>'
+            );
+            $documentDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+                . '<w:body><w:sectPr/></w:body></w:document>'
+            );
+
+            $tempZipPath = tempnam(sys_get_temp_dir(), 'tracker_test_') . '.zip';
+            $zip = new ZipArchive();
+            $zip->open($tempZipPath, ZipArchive::CREATE);
+            $zip->addFromString('word/header1.xml', '<h/>');
+            $zip->addFromString('word/footer2.xml', '<f/>');
+            $zip->addFromString('word/header4.xml', '<h/>');
+            $zip->close();
+            $zip->open($tempZipPath);
+
+            // Act
+            $tracker = IdTracker::initializeFromTarget($zip, $relsDom, $documentDom, null);
+            $zip->close();
+            unlink($tempZipPath);
+
+            // Assert -- next header/footer number should be 5 (max was 4)
+            expect($tracker->nextHeaderFooterNumber())->toBe(5);
+        });
+
+        it('handles null numberingDom by skipping numbering scan', function (): void {
+            // Arrange
+            $relsDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"/>'
+            );
+            $documentDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+                . '<w:body><w:sectPr/></w:body></w:document>'
+            );
+            $zip = new ZipArchive();
+
+            // Act -- null numberingDom should not throw
+            $tracker = IdTracker::initializeFromTarget($zip, $relsDom, $documentDom, null);
+
+            // Assert -- numId starts from 1 (counter was 0)
+            expect($tracker->nextNumId())->toBe(1);
+            expect($tracker->nextAbstractNumId())->toBe(1);
+        });
     });
 
     describe('sequential increment', function (): void {
@@ -140,6 +220,63 @@ describe('IdTracker', function (): void {
             expect($id1)->toBe('rId1');
             expect($id2)->toBe('rId2');
             expect($id3)->toBe('rId3');
+        });
+
+        it('generates sequential header/footer numbers', function (): void {
+            // Arrange
+            $relsDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"/>'
+            );
+            $documentDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+                . '<w:body><w:sectPr/></w:body></w:document>'
+            );
+            $zip = new ZipArchive();
+            $tracker = IdTracker::initializeFromTarget($zip, $relsDom, $documentDom, null);
+
+            // Act + Assert
+            expect($tracker->nextHeaderFooterNumber())->toBe(1);
+            expect($tracker->nextHeaderFooterNumber())->toBe(2);
+        });
+
+        it('generates sequential style IDs starting from 1001', function (): void {
+            // Arrange
+            $relsDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"/>'
+            );
+            $documentDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+                . '<w:body><w:sectPr/></w:body></w:document>'
+            );
+            $zip = new ZipArchive();
+            $tracker = IdTracker::initializeFromTarget($zip, $relsDom, $documentDom, null);
+
+            // Act + Assert -- style ID counter starts at 1000, so first next is 1001
+            expect($tracker->nextStyleId())->toBe(1001);
+            expect($tracker->nextStyleId())->toBe(1002);
+        });
+
+        it('generates sequential bookmark IDs', function (): void {
+            // Arrange
+            $relsDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"/>'
+            );
+            $documentDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+                . '<w:body><w:sectPr/></w:body></w:document>'
+            );
+            $zip = new ZipArchive();
+            $tracker = IdTracker::initializeFromTarget($zip, $relsDom, $documentDom, null);
+
+            // Act + Assert
+            expect($tracker->nextBookmarkId())->toBe(1);
+            expect($tracker->nextBookmarkId())->toBe(2);
         });
 
         it('generates sequential image numbers', function (): void {

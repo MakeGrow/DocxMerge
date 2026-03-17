@@ -6,6 +6,7 @@ namespace DocxMerge\Content;
 
 use DocxMerge\Dto\ExtractedContent;
 use DocxMerge\Exception\InvalidSourceException;
+use DocxMerge\Xml\XmlHelper;
 use DOMDocument;
 use DOMElement;
 use DOMNode;
@@ -23,9 +24,6 @@ use DOMXPath;
  */
 final class ContentExtractor implements ContentExtractorInterface
 {
-    /** WordprocessingML main namespace URI. */
-    private const NS_W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
-
     /**
      * Extracts body content from a source document.
      *
@@ -105,7 +103,7 @@ final class ContentExtractor implements ContentExtractorInterface
     private function createXpath(DOMDocument $dom): DOMXPath
     {
         $xpath = new DOMXPath($dom);
-        $xpath->registerNamespace('w', self::NS_W);
+        $xpath->registerNamespace('w', XmlHelper::NS_W);
 
         return $xpath;
     }

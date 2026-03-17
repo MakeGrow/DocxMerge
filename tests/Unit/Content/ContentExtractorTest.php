@@ -107,6 +107,64 @@ describe('ContentExtractor', function (): void {
             expect($result->nodes)->toHaveCount(1);
         });
 
+        it('handles a document without a final sectPr gracefully', function (): void {
+            // Arrange
+            $extractor = new ContentExtractor();
+            $dom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+                . '<w:body>'
+                . '<w:p><w:r><w:t>Paragraph 1</w:t></w:r></w:p>'
+                . '<w:p><w:r><w:t>Paragraph 2</w:t></w:r></w:p>'
+                . '</w:body></w:document>'
+            );
+
+            // Act
+            $result = $extractor->extract($dom);
+
+            // Assert -- both paragraphs should be extracted, finalSectPr should be null
+            expect($result->nodes)->toHaveCount(2);
+            expect($result->finalSectPr)->toBeNull();
+            expect($result->sectionCount)->toBe(1);
+        });
+
+        it('returns empty nodes for a body with only a sectPr', function (): void {
+            // Arrange
+            $extractor = new ContentExtractor();
+            $dom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+                . '<w:body>'
+                . '<w:sectPr><w:pgSz w:w="12240" w:h="15840"/></w:sectPr>'
+                . '</w:body></w:document>'
+            );
+
+            // Act
+            $result = $extractor->extract($dom);
+
+            // Assert -- no content paragraphs, just the final sectPr
+            expect($result->nodes)->toHaveCount(0);
+            expect($result->finalSectPr)->not->toBeNull();
+            expect($result->sectionCount)->toBe(1);
+        });
+
+        it('throws InvalidSourceException for negative section index', function (): void {
+            // Arrange
+            $extractor = new ContentExtractor();
+            $dom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+                . '<w:body>'
+                . '<w:p><w:r><w:t>Content</w:t></w:r></w:p>'
+                . '<w:sectPr/>'
+                . '</w:body></w:document>'
+            );
+
+            // Act + Assert
+            expect(fn () => $extractor->extract($dom, sectionIndex: -1))
+                ->toThrow(InvalidSourceException::class);
+        });
+
         it('throws InvalidSourceException for out-of-bounds section index', function (): void {
             // Arrange
             $extractor = new ContentExtractor();

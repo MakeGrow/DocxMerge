@@ -6,6 +6,7 @@ namespace DocxMerge\Numbering;
 
 use DocxMerge\Dto\NumberingMap;
 use DocxMerge\Tracking\IdTracker;
+use DocxMerge\Xml\XmlHelper;
 use DOMDocument;
 use DOMElement;
 use DOMXPath;
@@ -21,9 +22,6 @@ use DOMXPath;
  */
 final class NumberingMerger implements NumberingMergerInterface
 {
-    /** WordprocessingML main namespace URI. */
-    private const NS_W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
-
     /**
      * Builds a mapping from source numbering IDs to target IDs.
      *
@@ -47,7 +45,7 @@ final class NumberingMerger implements NumberingMergerInterface
         $usedNumIds = $this->extractUsedNumIds($contentXml);
 
         $sourceXpath = new DOMXPath($sourceNumberingDom);
-        $sourceXpath->registerNamespace('w', self::NS_W);
+        $sourceXpath->registerNamespace('w', XmlHelper::NS_W);
 
         // --- Phase 1: Build index of source w:num elements by numId ---
         /** @var array<int, DOMElement> $sourceNumsByNumId */
@@ -56,7 +54,7 @@ final class NumberingMerger implements NumberingMergerInterface
         if ($numNodes !== false) {
             foreach ($numNodes as $numNode) {
                 assert($numNode instanceof DOMElement);
-                $numId = (int) $numNode->getAttributeNS(self::NS_W, 'numId');
+                $numId = (int) $numNode->getAttributeNS(XmlHelper::NS_W, 'numId');
                 $sourceNumsByNumId[$numId] = $numNode;
             }
         }
@@ -68,7 +66,7 @@ final class NumberingMerger implements NumberingMergerInterface
         if ($abstractNumNodes !== false) {
             foreach ($abstractNumNodes as $abstractNode) {
                 assert($abstractNode instanceof DOMElement);
-                $absId = (int) $abstractNode->getAttributeNS(self::NS_W, 'abstractNumId');
+                $absId = (int) $abstractNode->getAttributeNS(XmlHelper::NS_W, 'abstractNumId');
                 $sourceAbstractNumsById[$absId] = $abstractNode;
             }
         }
@@ -109,7 +107,7 @@ final class NumberingMerger implements NumberingMergerInterface
                     // Clone the abstractNum node and update its ID
                     $clonedAbstractNum = $sourceAbstractNumsById[$oldAbstractNumId]->cloneNode(true);
                     assert($clonedAbstractNum instanceof DOMElement);
-                    $clonedAbstractNum->setAttributeNS(self::NS_W, 'w:abstractNumId', (string) $newAbstractNumId);
+                    $clonedAbstractNum->setAttributeNS(XmlHelper::NS_W, 'w:abstractNumId', (string) $newAbstractNumId);
                     $abstractNumNodesToImport[] = $clonedAbstractNum;
                 }
             }
@@ -117,18 +115,18 @@ final class NumberingMerger implements NumberingMergerInterface
             // Clone the num node and update its IDs
             $clonedNum = $numElement->cloneNode(true);
             assert($clonedNum instanceof DOMElement);
-            $clonedNum->setAttributeNS(self::NS_W, 'w:numId', (string) $newNumId);
+            $clonedNum->setAttributeNS(XmlHelper::NS_W, 'w:numId', (string) $newNumId);
 
             // Update the abstractNumId reference inside the cloned num
             $ownerDoc = $clonedNum->ownerDocument;
             assert($ownerDoc instanceof DOMDocument);
             $clonedXpath = new DOMXPath($ownerDoc);
-            $clonedXpath->registerNamespace('w', self::NS_W);
+            $clonedXpath->registerNamespace('w', XmlHelper::NS_W);
             $clonedAbsIdNodes = $clonedXpath->query('w:abstractNumId', $clonedNum);
             if ($clonedAbsIdNodes !== false && $clonedAbsIdNodes->length > 0) {
                 $absIdElement = $clonedAbsIdNodes->item(0);
                 assert($absIdElement instanceof DOMElement);
-                $absIdElement->setAttributeNS(self::NS_W, 'w:val', (string) $abstractNumMap[$oldAbstractNumId]);
+                $absIdElement->setAttributeNS(XmlHelper::NS_W, 'w:val', (string) $abstractNumMap[$oldAbstractNumId]);
             }
 
             $numNodesToImport[] = $clonedNum;
@@ -163,7 +161,7 @@ final class NumberingMerger implements NumberingMergerInterface
         }
 
         $targetXpath = new DOMXPath($targetNumberingDom);
-        $targetXpath->registerNamespace('w', self::NS_W);
+        $targetXpath->registerNamespace('w', XmlHelper::NS_W);
 
         $count = 0;
 

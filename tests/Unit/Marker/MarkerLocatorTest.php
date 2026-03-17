@@ -98,6 +98,43 @@ describe('MarkerLocator', function (): void {
             expect($result)->toBeInstanceOf(MarkerLocation::class);
         });
 
+        it('returns null for a document with no paragraphs', function (): void {
+            // Arrange
+            $locator = new MarkerLocator();
+            $dom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+                . '<w:body>'
+                . '<w:sectPr/>'
+                . '</w:body></w:document>'
+            );
+
+            // Act
+            $result = $locator->locate($dom, 'CONTENT', '/\$\{([A-Z_][A-Z0-9_]*)\}/');
+
+            // Assert
+            expect($result)->toBeNull();
+        });
+
+        it('returns null for a paragraph with no w:t elements', function (): void {
+            // Arrange
+            $locator = new MarkerLocator();
+            $dom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+                . '<w:body>'
+                . '<w:p><w:pPr><w:jc w:val="center"/></w:pPr></w:p>'
+                . '<w:sectPr/>'
+                . '</w:body></w:document>'
+            );
+
+            // Act
+            $result = $locator->locate($dom, 'CONTENT', '/\$\{([A-Z_][A-Z0-9_]*)\}/');
+
+            // Assert
+            expect($result)->toBeNull();
+        });
+
         it('finds the correct marker when multiple markers exist', function (): void {
             // Arrange
             $locator = new MarkerLocator();

@@ -6,6 +6,7 @@ namespace DocxMerge\Section;
 
 use DocxMerge\Dto\ExtractedContent;
 use DocxMerge\Dto\HeaderFooterMap;
+use DocxMerge\Xml\XmlHelper;
 use DOMDocument;
 use DOMElement;
 
@@ -18,9 +19,6 @@ use DOMElement;
  */
 final class SectionPropertiesApplier implements SectionPropertiesApplierInterface
 {
-    /** @var string Relationship references namespace URI. */
-    private const NS_R = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
-
     /**
      * Applies section properties from the source to the target document.
      *
@@ -71,7 +69,7 @@ final class SectionPropertiesApplier implements SectionPropertiesApplierInterfac
                 continue;
             }
 
-            $oldRId = $child->getAttributeNS(self::NS_R, 'id');
+            $oldRId = $child->getAttributeNS(XmlHelper::NS_R, 'id');
 
             if ($oldRId === '') {
                 continue;
@@ -83,7 +81,7 @@ final class SectionPropertiesApplier implements SectionPropertiesApplierInterfac
                 continue;
             }
 
-            $child->setAttributeNS(self::NS_R, 'r:id', $newRId);
+            $child->setAttributeNS(XmlHelper::NS_R, 'r:id', $newRId);
         }
     }
 }

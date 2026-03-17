@@ -8,6 +8,7 @@ use DocxMerge\Dto\NumberingMap;
 use DocxMerge\Dto\RelationshipMap;
 use DocxMerge\Dto\StyleMap;
 use DocxMerge\Tracking\IdTracker;
+use DocxMerge\Xml\XmlHelper;
 use DOMDocument;
 use DOMElement;
 use DOMNode;
@@ -25,15 +26,6 @@ use DOMXPath;
  */
 final class IdRemapper implements IdRemapperInterface
 {
-    /** @var string WordprocessingML main namespace URI. */
-    private const NS_W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
-
-    /** @var string Office document relationships namespace URI. */
-    private const NS_R = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
-
-    /** @var string WordprocessingDrawing namespace URI. */
-    private const NS_WP = 'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing';
-
     /**
      * Remaps all IDs in the extracted content DOM nodes.
      *
@@ -60,10 +52,10 @@ final class IdRemapper implements IdRemapperInterface
         DOMDocument $targetDom,
     ): void {
         $xpath = new DOMXPath($targetDom);
-        $xpath->registerNamespace('w', self::NS_W);
-        $xpath->registerNamespace('r', self::NS_R);
-        $xpath->registerNamespace('wp', self::NS_WP);
-        $xpath->registerNamespace('a', 'http://schemas.openxmlformats.org/drawingml/2006/main');
+        $xpath->registerNamespace('w', XmlHelper::NS_W);
+        $xpath->registerNamespace('r', XmlHelper::NS_R);
+        $xpath->registerNamespace('wp', XmlHelper::NS_WP);
+        $xpath->registerNamespace('a', XmlHelper::NS_A);
 
         foreach ($contentNodes as $node) {
             $this->remapRelationshipIds($node, $xpath, $relationshipMap);
@@ -240,7 +232,7 @@ final class IdRemapper implements IdRemapperInterface
                 if (!$start instanceof DOMElement) {
                     continue;
                 }
-                $oldId = $start->getAttributeNS(self::NS_W, 'id');
+                $oldId = $start->getAttributeNS(XmlHelper::NS_W, 'id');
                 if ($oldId === '') {
                     continue;
                 }
@@ -249,7 +241,7 @@ final class IdRemapper implements IdRemapperInterface
                     $bookmarkMap[$oldId] = $idTracker->nextBookmarkId();
                 }
 
-                $start->setAttributeNS(self::NS_W, 'w:id', (string) $bookmarkMap[$oldId]);
+                $start->setAttributeNS(XmlHelper::NS_W, 'w:id', (string) $bookmarkMap[$oldId]);
             }
         }
 
@@ -260,7 +252,7 @@ final class IdRemapper implements IdRemapperInterface
                 if (!$end instanceof DOMElement) {
                     continue;
                 }
-                $oldId = $end->getAttributeNS(self::NS_W, 'id');
+                $oldId = $end->getAttributeNS(XmlHelper::NS_W, 'id');
                 if ($oldId === '') {
                     continue;
                 }
@@ -270,7 +262,7 @@ final class IdRemapper implements IdRemapperInterface
                     $bookmarkMap[$oldId] = $idTracker->nextBookmarkId();
                 }
 
-                $end->setAttributeNS(self::NS_W, 'w:id', (string) $bookmarkMap[$oldId]);
+                $end->setAttributeNS(XmlHelper::NS_W, 'w:id', (string) $bookmarkMap[$oldId]);
             }
         }
     }

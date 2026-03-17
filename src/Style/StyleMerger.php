@@ -6,6 +6,7 @@ namespace DocxMerge\Style;
 
 use DocxMerge\Dto\StyleMap;
 use DocxMerge\Dto\StyleMapping;
+use DocxMerge\Xml\XmlHelper;
 use DOMDocument;
 use DOMElement;
 use DOMXPath;
@@ -21,9 +22,6 @@ use DOMXPath;
  */
 final class StyleMerger implements StyleMergerInterface
 {
-    /** WordprocessingML main namespace URI. */
-    private const NS_W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
-
     /** Base ID for renamed styles that conflict with existing target styles. */
     private const RENAMED_ID_BASE = 1000;
 
@@ -74,12 +72,12 @@ final class StyleMerger implements StyleMergerInterface
                 continue;
             }
 
-            $oldId = $styleNode->getAttributeNS(self::NS_W, 'styleId');
+            $oldId = $styleNode->getAttributeNS(XmlHelper::NS_W, 'styleId');
             if ($oldId === '') {
                 continue;
             }
 
-            $type = $styleNode->getAttributeNS(self::NS_W, 'type');
+            $type = $styleNode->getAttributeNS(XmlHelper::NS_W, 'type');
             $sourceHash = $this->computeContentHash($styleNode);
 
             if (isset($targetIdSet[$oldId])) {
@@ -156,7 +154,7 @@ final class StyleMerger implements StyleMergerInterface
 
             if ($importedNode instanceof DOMElement) {
                 // Update the styleId to the mapped new ID.
-                $importedNode->setAttributeNS(self::NS_W, 'w:styleId', $mapping->newId);
+                $importedNode->setAttributeNS(XmlHelper::NS_W, 'w:styleId', $mapping->newId);
             }
 
             $targetRoot->appendChild($importedNode);
@@ -176,7 +174,7 @@ final class StyleMerger implements StyleMergerInterface
     private function createStyleXpath(DOMDocument $dom): DOMXPath
     {
         $xpath = new DOMXPath($dom);
-        $xpath->registerNamespace('w', self::NS_W);
+        $xpath->registerNamespace('w', XmlHelper::NS_W);
 
         return $xpath;
     }
@@ -202,7 +200,7 @@ final class StyleMerger implements StyleMergerInterface
                 continue;
             }
 
-            $styleId = $styleNode->getAttributeNS(self::NS_W, 'styleId');
+            $styleId = $styleNode->getAttributeNS(XmlHelper::NS_W, 'styleId');
             if ($styleId === '') {
                 continue;
             }
@@ -234,7 +232,7 @@ final class StyleMerger implements StyleMergerInterface
                 continue;
             }
 
-            $styleId = $styleNode->getAttributeNS(self::NS_W, 'styleId');
+            $styleId = $styleNode->getAttributeNS(XmlHelper::NS_W, 'styleId');
             if ($styleId !== '') {
                 $set[$styleId] = true;
             }
@@ -264,9 +262,9 @@ final class StyleMerger implements StyleMergerInterface
         }
 
         // Remove metadata attributes that do not affect visual definition.
-        $clone->removeAttributeNS(self::NS_W, 'styleId');
-        $clone->removeAttributeNS(self::NS_W, 'customStyle');
-        $clone->removeAttributeNS(self::NS_W, 'default');
+        $clone->removeAttributeNS(XmlHelper::NS_W, 'styleId');
+        $clone->removeAttributeNS(XmlHelper::NS_W, 'customStyle');
+        $clone->removeAttributeNS(XmlHelper::NS_W, 'default');
 
         // Remove metadata child elements (w:name, w:aliases).
         $this->removeChildByLocalName($clone, 'name');
@@ -303,7 +301,7 @@ final class StyleMerger implements StyleMergerInterface
             if (
                 $child instanceof DOMElement
                 && $child->localName === $localName
-                && $child->namespaceURI === self::NS_W
+                && $child->namespaceURI === XmlHelper::NS_W
             ) {
                 $toRemove[] = $child;
             }

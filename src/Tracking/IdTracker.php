@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DocxMerge\Tracking;
 
+use DocxMerge\Xml\XmlHelper;
 use DOMDocument;
 use DOMXPath;
 use ZipArchive;
@@ -68,10 +69,7 @@ final class IdTracker
     private function scanRelationshipIds(DOMDocument $relsDom): void
     {
         $xpath = new DOMXPath($relsDom);
-        $xpath->registerNamespace(
-            'rel',
-            'http://schemas.openxmlformats.org/package/2006/relationships'
-        );
+        $xpath->registerNamespace('rel', XmlHelper::NS_REL);
 
         $nodes = $xpath->query('//rel:Relationship/@Id');
 
@@ -175,10 +173,7 @@ final class IdTracker
     private function scanDocPrIds(DOMDocument $documentDom): void
     {
         $xpath = new DOMXPath($documentDom);
-        $xpath->registerNamespace(
-            'wp',
-            'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing'
-        );
+        $xpath->registerNamespace('wp', XmlHelper::NS_WP);
 
         $nodes = $xpath->query('//wp:docPr/@id');
 
@@ -205,10 +200,7 @@ final class IdTracker
     private function scanBookmarkIds(DOMDocument $documentDom): void
     {
         $xpath = new DOMXPath($documentDom);
-        $xpath->registerNamespace(
-            'w',
-            'http://schemas.openxmlformats.org/wordprocessingml/2006/main'
-        );
+        $xpath->registerNamespace('w', XmlHelper::NS_W);
 
         $nodes = $xpath->query('//w:bookmarkStart/@w:id');
 
@@ -235,10 +227,7 @@ final class IdTracker
     private function scanNumberingIds(DOMDocument $numberingDom): void
     {
         $xpath = new DOMXPath($numberingDom);
-        $xpath->registerNamespace(
-            'w',
-            'http://schemas.openxmlformats.org/wordprocessingml/2006/main'
-        );
+        $xpath->registerNamespace('w', XmlHelper::NS_W);
 
         // Scan w:num/@w:numId for max numId
         $numNodes = $xpath->query('//w:num/@w:numId');

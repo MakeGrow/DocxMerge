@@ -6,6 +6,7 @@ namespace DocxMerge\Validation;
 
 use DocxMerge\Dto\ValidationResult;
 use DocxMerge\Merge\MergeContext;
+use DocxMerge\Xml\XmlHelper;
 use DOMXPath;
 
 /**
@@ -19,20 +20,12 @@ use DOMXPath;
  */
 final class DocumentValidator implements DocumentValidatorInterface
 {
-    /** WordprocessingML namespace URI. */
-    private const NS_W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
-
-    /** Office relationships namespace URI. */
-    private const NS_R = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
-
-    /** Package relationships namespace URI. */
-    private const NS_REL = 'http://schemas.openxmlformats.org/package/2006/relationships';
-
     /**
-     * {@inheritDoc}
+     * Validates the consistency of the merged document.
      *
      * Runs all integrity checks against the merge context and returns
-     * a ValidationResult with any errors and warnings found.
+     * a ValidationResult with any errors and warnings found. Checks orphaned
+     * relationship IDs, numbering IDs, and style references.
      *
      * @param MergeContext $context The merge context with all DOMs and the ZIP.
      *
@@ -63,7 +56,7 @@ final class DocumentValidator implements DocumentValidatorInterface
     {
         // Build set of known relationship IDs from rels DOM
         $relsXpath = new DOMXPath($context->relsDom);
-        $relsXpath->registerNamespace('rel', self::NS_REL);
+        $relsXpath->registerNamespace('rel', XmlHelper::NS_REL);
 
         /** @var array<string, true> $knownRIds */
         $knownRIds = [];
@@ -77,7 +70,7 @@ final class DocumentValidator implements DocumentValidatorInterface
 
         // Find all r:embed and r:id attributes in document.xml
         $docXpath = new DOMXPath($context->documentDom);
-        $docXpath->registerNamespace('r', self::NS_R);
+        $docXpath->registerNamespace('r', XmlHelper::NS_R);
 
         $embedNodes = $docXpath->query('//@r:embed');
         if ($embedNodes !== false) {
@@ -110,7 +103,7 @@ final class DocumentValidator implements DocumentValidatorInterface
     {
         // Build set of known numIds from numbering DOM
         $numXpath = new DOMXPath($context->numberingDom);
-        $numXpath->registerNamespace('w', self::NS_W);
+        $numXpath->registerNamespace('w', XmlHelper::NS_W);
 
         /** @var array<int, true> $knownNumIds */
         $knownNumIds = [];
@@ -125,7 +118,7 @@ final class DocumentValidator implements DocumentValidatorInterface
 
         // Find all w:numId references in document.xml
         $docXpath = new DOMXPath($context->documentDom);
-        $docXpath->registerNamespace('w', self::NS_W);
+        $docXpath->registerNamespace('w', XmlHelper::NS_W);
 
         $numIdNodes = $docXpath->query('//w:numId/@w:val');
         if ($numIdNodes !== false) {
@@ -149,7 +142,7 @@ final class DocumentValidator implements DocumentValidatorInterface
     {
         // Build set of known styleIds from styles DOM
         $stylesXpath = new DOMXPath($context->stylesDom);
-        $stylesXpath->registerNamespace('w', self::NS_W);
+        $stylesXpath->registerNamespace('w', XmlHelper::NS_W);
 
         /** @var array<string, true> $knownStyleIds */
         $knownStyleIds = [];
@@ -163,7 +156,7 @@ final class DocumentValidator implements DocumentValidatorInterface
 
         // Find all w:pStyle and w:rStyle references in document.xml
         $docXpath = new DOMXPath($context->documentDom);
-        $docXpath->registerNamespace('w', self::NS_W);
+        $docXpath->registerNamespace('w', XmlHelper::NS_W);
 
         $pStyleNodes = $docXpath->query('//w:pStyle/@w:val');
         if ($pStyleNodes !== false) {

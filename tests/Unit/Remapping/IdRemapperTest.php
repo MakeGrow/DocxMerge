@@ -373,5 +373,61 @@ describe('IdRemapper', function (): void {
             expect($ends->length)->toBe(1);
             expect($starts->item(0)->nodeValue)->toBe($ends->item(0)->nodeValue);
         });
+        it('remaps bookmarkEnd without matching bookmarkStart by assigning a new ID', function (): void {
+            // Arrange
+            $remapper = new IdRemapper();
+            $dom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+                . '<w:body>'
+                . '<w:p>'
+                . '<w:bookmarkEnd w:id="42"/>'
+                . '</w:p>'
+                . '<w:sectPr/>'
+                . '</w:body></w:document>'
+            );
+            $xpath = createXpathWithNamespaces($dom);
+            $paragraphs = $xpath->query('//w:p');
+            /** @var list<DOMNode> $nodes */
+            $nodes = [];
+            for ($i = 0; $i < $paragraphs->length; $i++) {
+                $nodes[] = $paragraphs->item($i);
+            }
+
+            $relMap = new RelationshipMap([]);
+            $styleMap = new StyleMap([]);
+            $numberingMap = new NumberingMap([], [], [], []);
+            $idTracker = new IdTracker();
+
+            // Act
+            $remapper->remap($nodes, $relMap, $styleMap, $numberingMap, $idTracker, $dom);
+
+            // Assert -- bookmarkEnd should have a new ID assigned
+            $ends = $xpath->query('//w:bookmarkEnd/@w:id');
+            expect($ends->length)->toBe(1);
+            // The new ID should be a valid integer > 0
+            $newId = (int) $ends->item(0)->nodeValue;
+            expect($newId)->toBeGreaterThan(0);
+        });
+
+        it('handles empty content nodes without error', function (): void {
+            // Arrange
+            $remapper = new IdRemapper();
+            $dom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+                . '<w:body><w:sectPr/></w:body></w:document>'
+            );
+            $relMap = new RelationshipMap([]);
+            $styleMap = new StyleMap([]);
+            $numberingMap = new NumberingMap([], [], [], []);
+            $idTracker = new IdTracker();
+
+            // Act -- passing empty node list should not throw
+            $remapper->remap([], $relMap, $styleMap, $numberingMap, $idTracker, $dom);
+
+            // Assert -- no-op, document unchanged
+            expect($dom->saveXML())->toContain('w:body');
+        });
     });
 });

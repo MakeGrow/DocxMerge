@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DocxMerge\ContentTypes;
 
+use DocxMerge\Xml\XmlHelper;
 use DOMDocument;
 use DOMXPath;
 use ZipArchive;
@@ -19,9 +20,6 @@ use ZipArchive;
  */
 final class ContentTypesManager implements ContentTypesManagerInterface
 {
-    /** Content Types XML namespace URI. */
-    private const NS_CT = 'http://schemas.openxmlformats.org/package/2006/content-types';
-
     /**
      * Maps file extensions to their MIME content types.
      *
@@ -45,10 +43,11 @@ final class ContentTypesManager implements ContentTypesManagerInterface
     private const FOOTER_CONTENT_TYPE = 'application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml';
 
     /**
-     * {@inheritDoc}
+     * Ensures all parts in the ZIP have entries in [Content_Types].xml.
      *
      * Scans the ZIP archive for media files and header/footer parts,
-     * adding missing Default and Override entries to [Content_Types].xml.
+     * adding missing Default entries for file extensions and Override
+     * entries for specific parts.
      *
      * @param DOMDocument $contentTypesDom The [Content_Types].xml DOM (modified in place).
      * @param ZipArchive  $targetZip       The target ZIP to scan for parts.
@@ -58,7 +57,7 @@ final class ContentTypesManager implements ContentTypesManagerInterface
         ZipArchive $targetZip,
     ): void {
         $xpath = new DOMXPath($contentTypesDom);
-        $xpath->registerNamespace('ct', self::NS_CT);
+        $xpath->registerNamespace('ct', XmlHelper::NS_CT);
 
         $this->addDefaultEntriesForMediaFiles($contentTypesDom, $xpath, $targetZip);
         $this->addOverrideEntriesForHeadersAndFooters($contentTypesDom, $xpath, $targetZip);
@@ -109,7 +108,7 @@ final class ContentTypesManager implements ContentTypesManagerInterface
 
             $contentType = self::EXTENSION_CONTENT_TYPES[$extension] ?? 'application/octet-stream';
 
-            $element = $dom->createElementNS(self::NS_CT, 'Default');
+            $element = $dom->createElementNS(XmlHelper::NS_CT, 'Default');
             $element->setAttribute('Extension', $extension);
             $element->setAttribute('ContentType', $contentType);
             $root->appendChild($element);
@@ -157,7 +156,7 @@ final class ContentTypesManager implements ContentTypesManagerInterface
                 ? self::HEADER_CONTENT_TYPE
                 : self::FOOTER_CONTENT_TYPE;
 
-            $element = $dom->createElementNS(self::NS_CT, 'Override');
+            $element = $dom->createElementNS(XmlHelper::NS_CT, 'Override');
             $element->setAttribute('PartName', $partName);
             $element->setAttribute('ContentType', $contentType);
             $root->appendChild($element);

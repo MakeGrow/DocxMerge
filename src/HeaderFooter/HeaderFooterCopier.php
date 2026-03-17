@@ -7,6 +7,7 @@ namespace DocxMerge\HeaderFooter;
 use DocxMerge\Dto\HeaderFooterMap;
 use DocxMerge\Dto\HeaderFooterMapping;
 use DocxMerge\Tracking\IdTracker;
+use DocxMerge\Xml\XmlHelper;
 use DOMDocument;
 use DOMElement;
 use DOMXPath;
@@ -21,14 +22,11 @@ use ZipArchive;
  */
 final class HeaderFooterCopier implements HeaderFooterCopierInterface
 {
-    /** @var string Relationship type URI for headers. */
+    /** Relationship type URI for headers. */
     private const HEADER_TYPE = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/header';
 
-    /** @var string Relationship type URI for footers. */
+    /** Relationship type URI for footers. */
     private const FOOTER_TYPE = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer';
-
-    /** @var string Package relationships namespace URI. */
-    private const RELS_NAMESPACE = 'http://schemas.openxmlformats.org/package/2006/relationships';
 
     /**
      * Copies headers and footers from source to target.
@@ -55,7 +53,7 @@ final class HeaderFooterCopier implements HeaderFooterCopierInterface
         $mappings = [];
 
         $sourceXpath = new DOMXPath($sourceRelsDom);
-        $sourceXpath->registerNamespace('rel', self::RELS_NAMESPACE);
+        $sourceXpath->registerNamespace('rel', XmlHelper::NS_REL);
 
         // Find all header and footer relationships in the source
         $headerRels = $sourceXpath->query(
@@ -128,7 +126,7 @@ final class HeaderFooterCopier implements HeaderFooterCopierInterface
             return;
         }
 
-        $relElement = $relsDom->createElementNS(self::RELS_NAMESPACE, 'Relationship');
+        $relElement = $relsDom->createElementNS(XmlHelper::NS_REL, 'Relationship');
         $relElement->setAttribute('Id', $id);
         $relElement->setAttribute('Type', $type);
         $relElement->setAttribute('Target', $target);

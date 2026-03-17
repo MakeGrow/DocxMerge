@@ -101,6 +101,26 @@ describe('StyleMerger', function (): void {
             expect($map->getNewId('Heading1'))->not->toBe('Heading1');
             expect($map->isReused('Heading1'))->toBeFalse();
         });
+        it('returns an empty map when source has no styles', function (): void {
+            // Arrange
+            $merger = new StyleMerger();
+            $targetDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+                . '<w:style w:type="paragraph" w:styleId="Normal"><w:name w:val="Normal"/></w:style>'
+                . '</w:styles>'
+            );
+            $sourceDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"/>'
+            );
+
+            // Act
+            $map = $merger->buildMap($sourceDom, $targetDom);
+
+            // Assert
+            expect($map->mappings)->toBe([]);
+        });
     });
 
     describe('merge()', function (): void {

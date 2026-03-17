@@ -111,6 +111,69 @@ describe('RelationshipManager', function (): void {
             expect($map->getNewId('rId2'))->toBeNull();
         });
 
+        it('reuses existing target rId when Type+Target matches a duplicate', function (): void {
+            // Arrange
+            $manager = new RelationshipManager();
+            $sourceRelsDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+                . '<Relationship Id="rId1"'
+                . ' Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image"'
+                . ' Target="media/image1.png"/>'
+                . '</Relationships>'
+            );
+            // Target already has the same image relationship
+            $targetRelsDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+                . '<Relationship Id="rId10"'
+                . ' Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image"'
+                . ' Target="media/image1.png"/>'
+                . '</Relationships>'
+            );
+            $contentXml = '<a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"'
+                . ' r:embed="rId1"/>';
+            $idTracker = new IdTracker();
+
+            // Act
+            $map = $manager->buildMap($sourceRelsDom, $targetRelsDom, $contentXml, $idTracker);
+
+            // Assert -- should reuse rId10 from target, not create a new ID
+            expect($map->getNewId('rId1'))->toBe('rId10');
+            // Should not need file copy since duplicate exists in target
+            $filesToCopy = $map->getFilesToCopy();
+            expect($filesToCopy)->toBe([]);
+        });
+
+        it('marks external relationships as not needing file copy', function (): void {
+            // Arrange
+            $manager = new RelationshipManager();
+            $sourceRelsDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+                . '<Relationship Id="rId1"'
+                . ' Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink"'
+                . ' Target="https://example.com" TargetMode="External"/>'
+                . '</Relationships>'
+            );
+            $targetRelsDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"/>'
+            );
+            $contentXml = '<w:hyperlink xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"'
+                . ' r:id="rId1"><w:t>link</w:t></w:hyperlink>';
+            $idTracker = new IdTracker();
+
+            // Act
+            $map = $manager->buildMap($sourceRelsDom, $targetRelsDom, $contentXml, $idTracker);
+
+            // Assert
+            expect($map->getNewId('rId1'))->not->toBeNull();
+            // External rels don't need file copy
+            $filesToCopy = $map->getFilesToCopy();
+            expect($filesToCopy)->toBe([]);
+        });
+
         it('excludes relationships not referenced in the content', function (): void {
             // Arrange
             $manager = new RelationshipManager();

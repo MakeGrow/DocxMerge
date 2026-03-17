@@ -190,6 +190,151 @@ describe('IdRemapper', function (): void {
             expect($newId)->toBeGreaterThan(0);
         });
 
+        it('remaps w:rStyle attributes using the style map', function (): void {
+            // Arrange
+            $remapper = new IdRemapper();
+            $dom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+                . '<w:body>'
+                . '<w:p><w:r><w:rPr><w:rStyle w:val="SourceCharStyle"/></w:rPr>'
+                . '<w:t>text</w:t></w:r></w:p>'
+                . '<w:sectPr/>'
+                . '</w:body></w:document>'
+            );
+            $xpath = createXpathWithNamespaces($dom);
+            $paragraphs = $xpath->query('//w:p');
+            /** @var list<DOMNode> $nodes */
+            $nodes = [];
+            for ($i = 0; $i < $paragraphs->length; $i++) {
+                $nodes[] = $paragraphs->item($i);
+            }
+
+            $styleDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<w:style xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"'
+                . ' w:type="character" w:styleId="SourceCharStyle"><w:name w:val="Src"/></w:style>'
+            );
+            /** @var DOMElement $styleNode */
+            $styleNode = $styleDom->documentElement;
+
+            $relMap = new RelationshipMap([]);
+            $styleMap = new StyleMap([
+                'SourceCharStyle' => new StyleMapping(
+                    oldId: 'SourceCharStyle',
+                    newId: 'MappedCharStyle',
+                    type: 'character',
+                    node: $styleNode,
+                    reuseExisting: false,
+                ),
+            ]);
+            $numberingMap = new NumberingMap([], [], [], []);
+            $idTracker = new IdTracker();
+
+            // Act
+            $remapper->remap($nodes, $relMap, $styleMap, $numberingMap, $idTracker, $dom);
+
+            // Assert
+            $rStyles = $xpath->query('//w:rStyle/@w:val');
+            expect($rStyles->length)->toBe(1);
+            expect($rStyles->item(0)->nodeValue)->toBe('MappedCharStyle');
+        });
+
+        it('remaps w:tblStyle attributes using the style map', function (): void {
+            // Arrange
+            $remapper = new IdRemapper();
+            $dom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+                . '<w:body>'
+                . '<w:tbl><w:tblPr><w:tblStyle w:val="OldTableStyle"/></w:tblPr>'
+                . '<w:tr><w:tc><w:p><w:r><w:t>cell</w:t></w:r></w:p></w:tc></w:tr></w:tbl>'
+                . '<w:sectPr/>'
+                . '</w:body></w:document>'
+            );
+            $xpath = createXpathWithNamespaces($dom);
+            // Use the w:tbl element as the content node
+            $tables = $xpath->query('//w:tbl');
+            /** @var list<DOMNode> $nodes */
+            $nodes = [];
+            for ($i = 0; $i < $tables->length; $i++) {
+                $nodes[] = $tables->item($i);
+            }
+
+            $styleDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<w:style xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"'
+                . ' w:type="table" w:styleId="OldTableStyle"><w:name w:val="Tbl"/></w:style>'
+            );
+            /** @var DOMElement $styleNode */
+            $styleNode = $styleDom->documentElement;
+
+            $relMap = new RelationshipMap([]);
+            $styleMap = new StyleMap([
+                'OldTableStyle' => new StyleMapping(
+                    oldId: 'OldTableStyle',
+                    newId: 'NewTableStyle',
+                    type: 'table',
+                    node: $styleNode,
+                    reuseExisting: false,
+                ),
+            ]);
+            $numberingMap = new NumberingMap([], [], [], []);
+            $idTracker = new IdTracker();
+
+            // Act
+            $remapper->remap($nodes, $relMap, $styleMap, $numberingMap, $idTracker, $dom);
+
+            // Assert
+            $tblStyles = $xpath->query('//w:tblStyle/@w:val');
+            expect($tblStyles->length)->toBe(1);
+            expect($tblStyles->item(0)->nodeValue)->toBe('NewTableStyle');
+        });
+
+        it('remaps r:id attributes on hyperlinks using the relationship map', function (): void {
+            // Arrange
+            $remapper = new IdRemapper();
+            $dom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"'
+                . ' xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+                . '<w:body>'
+                . '<w:p><w:hyperlink r:id="rId5"><w:r><w:t>link</w:t></w:r></w:hyperlink></w:p>'
+                . '<w:sectPr/>'
+                . '</w:body></w:document>'
+            );
+            $xpath = createXpathWithNamespaces($dom);
+            $paragraphs = $xpath->query('//w:p');
+            /** @var list<DOMNode> $nodes */
+            $nodes = [];
+            for ($i = 0; $i < $paragraphs->length; $i++) {
+                $nodes[] = $paragraphs->item($i);
+            }
+
+            $relMap = new RelationshipMap([
+                'rId5' => new RelationshipMapping(
+                    oldId: 'rId5',
+                    newId: 'rId42',
+                    type: 'hyperlink',
+                    target: 'https://example.com',
+                    newTarget: 'https://example.com',
+                    needsFileCopy: false,
+                    isExternal: true,
+                ),
+            ]);
+            $styleMap = new StyleMap([]);
+            $numberingMap = new NumberingMap([], [], [], []);
+            $idTracker = new IdTracker();
+
+            // Act
+            $remapper->remap($nodes, $relMap, $styleMap, $numberingMap, $idTracker, $dom);
+
+            // Assert
+            $hyperlinks = $xpath->query('//w:hyperlink/@r:id');
+            expect($hyperlinks->length)->toBe(1);
+            expect($hyperlinks->item(0)->nodeValue)->toBe('rId42');
+        });
+
         it('remaps w:bookmarkStart and w:bookmarkEnd w:id attributes', function (): void {
             // Arrange
             $remapper = new IdRemapper();

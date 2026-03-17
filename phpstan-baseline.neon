@@ -24,53 +24,7 @@ parameters:
 			count: 1
 			path: tests/Unit/ContentTypes/ContentTypesManagerTest.php
 
-		-
-			message: '#^Instantiated class DocxMerge\\DocxMerger not found\.$#'
-			identifier: class.notFound
-			count: 9
-			path: tests/Integration/DocxMergerTest.php
 
-		-
-			message: '#^Call to method merge\(\) on an unknown class DocxMerge\\DocxMerger\.$#'
-			identifier: class.notFound
-			count: 9
-			path: tests/Integration/DocxMergerTest.php
-
-		-
-			message: '#^Unable to resolve the template type TValue in call to function expect$#'
-			identifier: argument.templateType
-			count: 1
-			path: tests/Integration/DocxMergerTest.php
-
-		-
-			message: '#^Parameter \#1 \$value of function expect contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 2
-			path: tests/Integration/DocxMergerTest.php
-
-		-
-			message: '#^Return type of call to function expect contains unresolvable type\.$#'
-			identifier: function.unresolvableReturnType
-			count: 2
-			path: tests/Integration/DocxMergerTest.php
-
-		-
-			message: '#^Call to method copy\(\) on an unknown class DocxMerge\\HeaderFooter\\HeaderFooterCopier\.$#'
-			identifier: class.notFound
-			count: 2
-			path: tests/Unit/HeaderFooter/HeaderFooterCopierTest.php
-
-		-
-			message: '#^Instantiated class DocxMerge\\HeaderFooter\\HeaderFooterCopier not found\.$#'
-			identifier: class.notFound
-			count: 2
-			path: tests/Unit/HeaderFooter/HeaderFooterCopierTest.php
-
-		-
-			message: '#^Unable to resolve the template type TValue in call to function expect$#'
-			identifier: argument.templateType
-			count: 2
-			path: tests/Unit/HeaderFooter/HeaderFooterCopierTest.php
 
 		-
 			message: '#^Cannot access property \$paragraph on DocxMerge\\Dto\\MarkerLocation\|null\.$#'
@@ -78,23 +32,6 @@ parameters:
 			count: 3
 			path: tests/Unit/Marker/MarkerLocatorTest.php
 
-		-
-			message: '#^Call to method copy\(\) on an unknown class DocxMerge\\Media\\MediaCopier\.$#'
-			identifier: class.notFound
-			count: 3
-			path: tests/Unit/Media/MediaCopierTest.php
-
-		-
-			message: '#^Instantiated class DocxMerge\\Media\\MediaCopier not found\.$#'
-			identifier: class.notFound
-			count: 3
-			path: tests/Unit/Media/MediaCopierTest.php
-
-		-
-			message: '#^Unable to resolve the template type TValue in call to function expect$#'
-			identifier: argument.templateType
-			count: 3
-			path: tests/Unit/Media/MediaCopierTest.php
 
 		-
 			message: '#^Cannot access property \$length on DOMNodeList\<DOMNameSpaceNode\|DOMNode\>\|false\.$#'
@@ -129,38 +66,27 @@ parameters:
 		-
 			message: '#^Cannot access property \$length on DOMNodeList\<DOMNameSpaceNode\|DOMNode\>\|false\.$#'
 			identifier: property.nonObject
-			count: 11
+			count: 17
 			path: tests/Unit/Remapping/IdRemapperTest.php
 
 		-
 			message: '#^Cannot access property \$nodeValue on DOMNameSpaceNode\|DOMNode\|null\.$#'
 			identifier: property.nonObject
-			count: 6
+			count: 9
 			path: tests/Unit/Remapping/IdRemapperTest.php
 
 		-
 			message: '#^Cannot call method item\(\) on DOMNodeList\<DOMNameSpaceNode\|DOMNode\>\|false\.$#'
 			identifier: method.nonObject
-			count: 11
+			count: 17
 			path: tests/Unit/Remapping/IdRemapperTest.php
 
 		-
 			message: '#^Parameter \#1 \$contentNodes of method DocxMerge\\Remapping\\IdRemapper\:\:remap\(\) expects list\<DOMNode\>, list\<DOMNameSpaceNode\|DOMNode\|null\> given\.$#'
 			identifier: argument.type
-			count: 5
+			count: 8
 			path: tests/Unit/Remapping/IdRemapperTest.php
 
-		-
-			message: '#^Call to method apply\(\) on an unknown class DocxMerge\\Section\\SectionPropertiesApplier\.$#'
-			identifier: class.notFound
-			count: 3
-			path: tests/Unit/Section/SectionPropertiesApplierTest.php
-
-		-
-			message: '#^Instantiated class DocxMerge\\Section\\SectionPropertiesApplier not found\.$#'
-			identifier: class.notFound
-			count: 3
-			path: tests/Unit/Section/SectionPropertiesApplierTest.php
 
 		-
 			message: '#^Cannot access property \$length on DOMNodeList\<DOMNameSpaceNode\|DOMNode\>\|false\.$#'
@@ -179,24 +105,6 @@ parameters:
 			identifier: notIdentical.alwaysFalse
 			count: 1
 			path: tests/Unit/Validation/DocumentValidatorTest.php
-
-		-
-			message: '#^Instantiated class DocxMerge\\Merge\\MergeOrchestrator not found\.$#'
-			identifier: class.notFound
-			count: 1
-			path: tests/Unit/Merge/MergeOrchestratorTest.php
-
-		-
-			message: '#^Call to method execute\(\) on an unknown class DocxMerge\\Merge\\MergeOrchestrator\.$#'
-			identifier: class.notFound
-			count: 1
-			path: tests/Unit/Merge/MergeOrchestratorTest.php
-
-		-
-			message: '#^Unable to resolve the template type TValue in call to function expect$#'
-			identifier: argument.templateType
-			count: 1
-			path: tests/Unit/Merge/MergeOrchestratorTest.php
 
 		-
 			message: '#^Cannot access property \$length on DOMNodeList\<DOMNameSpaceNode\|DOMNode\>\|false\.$#'

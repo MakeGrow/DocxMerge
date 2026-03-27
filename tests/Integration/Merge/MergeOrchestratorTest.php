@@ -15,8 +15,19 @@ use DocxMerge\Dto\MergeResult;
 use DocxMerge\Merge\MergeOrchestrator;
 
 describe('MergeOrchestrator', function (): void {
-    describe('execute()', function (): void {
-        it('returns a MergeResult after executing the pipeline', function (): void {
+    /** @var string $outputPath */
+    $outputPath = '';
+
+    afterEach(function () use (&$outputPath): void {
+        /** @var string $outputPath */
+        if ($outputPath !== '' && file_exists($outputPath)) {
+            unlink($outputPath);
+        }
+        $outputPath = '';
+    });
+
+    describe('execute()', function () use (&$outputPath): void {
+        it('returns a MergeResult after executing the pipeline', function () use (&$outputPath): void {
             // Arrange
             $orchestrator = new MergeOrchestrator();
 
@@ -40,11 +51,6 @@ describe('MergeOrchestrator', function (): void {
 
             // Assert
             expect($result)->toBeInstanceOf(MergeResult::class);
-
-            // Cleanup
-            if (file_exists($outputPath)) {
-                unlink($outputPath);
-            }
         });
     });
 });

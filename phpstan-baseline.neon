@@ -10,37 +10,37 @@ parameters:
 			message: '#^Cannot access property \$length on DOMNodeList\<DOMNameSpaceNode\|DOMNode\>\|false\.$#'
 			identifier: property.nonObject
 			count: 8
-			path: tests/Unit/ContentTypes/ContentTypesManagerTest.php
+			path: tests/Integration/ContentTypes/ContentTypesManagerTest.php
 
 		-
 			message: '#^Cannot call method getAttribute\(\) on DOMNameSpaceNode\|DOMNode\|null\.$#'
 			identifier: method.nonObject
 			count: 2
-			path: tests/Unit/ContentTypes/ContentTypesManagerTest.php
+			path: tests/Integration/ContentTypes/ContentTypesManagerTest.php
 
 		-
 			message: '#^Cannot call method item\(\) on DOMNodeList\<DOMNameSpaceNode\|DOMNode\>\|false\.$#'
 			identifier: method.nonObject
 			count: 2
-			path: tests/Unit/ContentTypes/ContentTypesManagerTest.php
+			path: tests/Integration/ContentTypes/ContentTypesManagerTest.php
 
 		-
 			message: '#^Unable to resolve the template type TValue in call to function expect$#'
 			identifier: argument.templateType
 			count: 2
-			path: tests/Unit/ContentTypes/ContentTypesManagerTest.php
+			path: tests/Integration/ContentTypes/ContentTypesManagerTest.php
 
 		-
 			message: '#^Result of && is always false\.$#'
 			identifier: booleanAnd.alwaysFalse
 			count: 1
-			path: tests/Unit/ContentTypes/ContentTypesManagerTest.php
+			path: tests/Integration/ContentTypes/ContentTypesManagerTest.php
 
 		-
 			message: '#^Strict comparison using \!\=\= between '''' and '''' will always evaluate to false\.$#'
 			identifier: notIdentical.alwaysFalse
 			count: 1
-			path: tests/Unit/ContentTypes/ContentTypesManagerTest.php
+			path: tests/Integration/ContentTypes/ContentTypesManagerTest.php
 
 
 
@@ -128,13 +128,13 @@ parameters:
 			message: '#^Result of && is always false\.$#'
 			identifier: booleanAnd.alwaysFalse
 			count: 1
-			path: tests/Unit/Validation/DocumentValidatorTest.php
+			path: tests/Integration/Validation/DocumentValidatorTest.php
 
 		-
 			message: '#^Strict comparison using \!\=\= between '''' and '''' will always evaluate to false\.$#'
 			identifier: notIdentical.alwaysFalse
 			count: 1
-			path: tests/Unit/Validation/DocumentValidatorTest.php
+			path: tests/Integration/Validation/DocumentValidatorTest.php
 
 		-
 			message: '#^Cannot access property \$length on DOMNodeList\<DOMNameSpaceNode\|DOMNode\>\|false\.$#'

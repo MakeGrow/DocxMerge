@@ -114,66 +114,6 @@ describe('IdTracker', function (): void {
             // Assert -- next bookmark id should be 11
             expect($tracker->nextBookmarkId())->toBe(11);
         });
-        it('detects max image number from ZIP media files', function (): void {
-            // Arrange
-            $relsDom = createDomFromXml(
-                '<?xml version="1.0"?>'
-                . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"/>'
-            );
-            $documentDom = createDomFromXml(
-                '<?xml version="1.0"?>'
-                . '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
-                . '<w:body><w:sectPr/></w:body></w:document>'
-            );
-
-            // Create a temp ZIP with media files
-            $tempZipPath = tempnam(sys_get_temp_dir(), 'tracker_test_') . '.zip';
-            $zip = new ZipArchive();
-            $zip->open($tempZipPath, ZipArchive::CREATE);
-            $zip->addFromString('word/media/image1.png', 'fake');
-            $zip->addFromString('word/media/image3.png', 'fake');
-            $zip->close();
-            $zip->open($tempZipPath);
-
-            // Act
-            $tracker = IdTracker::initializeFromTarget($zip, $relsDom, $documentDom, null);
-            $zip->close();
-            unlink($tempZipPath);
-
-            // Assert -- next image number should be 4 (max was 3)
-            expect($tracker->nextImageNumber())->toBe(4);
-        });
-
-        it('detects max header/footer number from ZIP', function (): void {
-            // Arrange
-            $relsDom = createDomFromXml(
-                '<?xml version="1.0"?>'
-                . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"/>'
-            );
-            $documentDom = createDomFromXml(
-                '<?xml version="1.0"?>'
-                . '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
-                . '<w:body><w:sectPr/></w:body></w:document>'
-            );
-
-            $tempZipPath = tempnam(sys_get_temp_dir(), 'tracker_test_') . '.zip';
-            $zip = new ZipArchive();
-            $zip->open($tempZipPath, ZipArchive::CREATE);
-            $zip->addFromString('word/header1.xml', '<h/>');
-            $zip->addFromString('word/footer2.xml', '<f/>');
-            $zip->addFromString('word/header4.xml', '<h/>');
-            $zip->close();
-            $zip->open($tempZipPath);
-
-            // Act
-            $tracker = IdTracker::initializeFromTarget($zip, $relsDom, $documentDom, null);
-            $zip->close();
-            unlink($tempZipPath);
-
-            // Assert -- next header/footer number should be 5 (max was 4)
-            expect($tracker->nextHeaderFooterNumber())->toBe(5);
-        });
-
         it('handles null numberingDom by skipping numbering scan', function (): void {
             // Arrange
             $relsDom = createDomFromXml(

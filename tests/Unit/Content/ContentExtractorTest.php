@@ -165,6 +165,53 @@ describe('ContentExtractor', function (): void {
                 ->toThrow(InvalidSourceException::class);
         });
 
+        it('filters out whitespace text nodes from body children', function (): void {
+            // Arrange
+            $extractor = new ContentExtractor();
+            // XML com newlines entre elementos gera text nodes quando preserveWhiteSpace=true
+            $xml = '<?xml version="1.0"?>'
+                . '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+                . "<w:body>\n"
+                . "  <w:p><w:r><w:t>Para 1</w:t></w:r></w:p>\n"
+                . "  <w:p><w:r><w:t>Para 2</w:t></w:r></w:p>\n"
+                . "  <w:sectPr/>\n"
+                . '</w:body></w:document>';
+            $dom = createDomFromXml($xml);
+
+            // Act
+            $result = $extractor->extract($dom);
+
+            // Assert -- only DOMElement nodes, no text nodes
+            expect($result->nodes)->toHaveCount(2);
+            foreach ($result->nodes as $node) {
+                expect($node)->toBeInstanceOf(DOMElement::class);
+            }
+        });
+
+        it('ignores non-paragraph elements when scanning for intermediate sectPr', function (): void {
+            // Arrange
+            $extractor = new ContentExtractor();
+            $dom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+                . '<w:body>'
+                . '<w:tbl><w:tr><w:tc><w:p><w:r><w:t>cell</w:t></w:r></w:p></w:tc></w:tr></w:tbl>'
+                . '<w:p><w:pPr><w:sectPr/></w:pPr></w:p>'
+                . '<w:p><w:r><w:t>Section 2</w:t></w:r></w:p>'
+                . '<w:sectPr/>'
+                . '</w:body></w:document>'
+            );
+
+            // Act
+            $result = $extractor->extract($dom);
+
+            // Assert
+            expect($result->sectionCount)->toBe(2);
+            expect($result->intermediateSectPrElements)->toHaveCount(1);
+            // All 3 content nodes (table + 2 paragraphs) should be extracted
+            expect($result->nodes)->toHaveCount(3);
+        });
+
         it('throws InvalidSourceException for out-of-bounds section index', function (): void {
             // Arrange
             $extractor = new ContentExtractor();

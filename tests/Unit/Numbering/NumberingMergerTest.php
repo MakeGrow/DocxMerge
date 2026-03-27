@@ -47,6 +47,33 @@ describe('NumberingMerger', function (): void {
             expect($map->getNewAbstractNumId(0))->not->toBeNull();
         });
 
+        it('returns an empty map when content has no numbering references', function (): void {
+            // Arrange
+            $merger = new NumberingMerger();
+            $sourceNumberingDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<w:numbering xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+                . '<w:abstractNum w:abstractNumId="0"><w:lvl w:ilvl="0"/></w:abstractNum>'
+                . '<w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num>'
+                . '</w:numbering>'
+            );
+            $targetNumberingDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<w:numbering xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"/>'
+            );
+            $contentXml = '<w:p xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+                . '<w:r><w:t>No lists here</w:t></w:r></w:p>';
+            $idTracker = new IdTracker();
+
+            // Act
+            $map = $merger->buildMap($sourceNumberingDom, $targetNumberingDom, $contentXml, $idTracker);
+
+            // Assert
+            expect($map)->toBeInstanceOf(NumberingMap::class);
+            expect($map->numMap)->toBe([]);
+            expect($map->abstractNumMap)->toBe([]);
+        });
+
         it('excludes numbering definitions not referenced in the content', function (): void {
             // Arrange
             $merger = new NumberingMerger();
@@ -83,6 +110,24 @@ describe('NumberingMerger', function (): void {
     });
 
     describe('merge()', function (): void {
+        it('returns zero when the target numbering DOM has no document element', function (): void {
+            // Arrange
+            $merger = new NumberingMerger();
+            $emptyTargetDom = new DOMDocument();
+            $numberingMap = new NumberingMap(
+                abstractNumMap: [],
+                numMap: [],
+                abstractNumNodes: [],
+                numNodes: [],
+            );
+
+            // Act
+            $result = $merger->merge($emptyTargetDom, $numberingMap);
+
+            // Assert
+            expect($result)->toBe(0);
+        });
+
         it('inserts abstractNum before num elements in the target DOM', function (): void {
             // Arrange
             $merger = new NumberingMerger();

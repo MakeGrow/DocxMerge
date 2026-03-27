@@ -63,6 +63,31 @@ describe('ContentTypesManager::registerRequiredPart()', function (): void {
         expect($relNode->getAttribute('Id'))->not->toBeEmpty();
     });
 
+    it('does nothing when content types DOM has no document element', function (): void {
+        // Arrange
+        $manager = new ContentTypesManager();
+        $emptyCtDom = new DOMDocument();
+        $relsDom = createDomFromXml(
+            '<?xml version="1.0"?>'
+            . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"/>'
+        );
+        $idTracker = new IdTracker();
+
+        // Act -- should not throw
+        $manager->registerRequiredPart(
+            $emptyCtDom,
+            $relsDom,
+            '/word/numbering.xml',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml',
+            'http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering',
+            'numbering.xml',
+            $idTracker,
+        );
+
+        // Assert -- CT DOM still has no documentElement
+        expect($emptyCtDom->documentElement)->toBeNull();
+    });
+
     it('does not duplicate override when already present', function (): void {
         // Arrange
         $manager = new ContentTypesManager();

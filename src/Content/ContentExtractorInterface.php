@@ -14,6 +14,8 @@ use DOMDocument;
  * Implementations must support full-document extraction and single-section
  * extraction, preserving intermediate sectPr elements properly encapsulated
  * in w:pPr.
+ *
+ * @codeCoverageIgnore
  */
 interface ContentExtractorInterface
 {

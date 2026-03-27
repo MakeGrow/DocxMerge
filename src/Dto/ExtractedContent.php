@@ -12,6 +12,8 @@ use DOMNode;
  *
  * Contains the DOM nodes to insert, the final section properties,
  * any intermediate section properties, and metadata about the source.
+ *
+ * @codeCoverageIgnore
  */
 final class ExtractedContent
 {

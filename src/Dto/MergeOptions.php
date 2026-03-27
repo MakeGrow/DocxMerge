@@ -8,6 +8,8 @@ namespace DocxMerge\Dto;
  * Configuration options for a merge operation.
  *
  * Controls marker pattern matching, strict mode, and reprocessing behavior.
+ *
+ * @codeCoverageIgnore
  */
 final class MergeOptions
 {

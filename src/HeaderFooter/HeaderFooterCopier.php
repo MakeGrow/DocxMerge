@@ -80,9 +80,11 @@ final class HeaderFooterCopier implements HeaderFooterCopierInterface
         }
 
         foreach ($headerRels as $relNode) {
+            // @codeCoverageIgnoreStart
             if (!$relNode instanceof DOMElement) {
                 continue;
             }
+            // @codeCoverageIgnoreEnd
 
             $oldId = $relNode->getAttribute('Id');
             $type = $relNode->getAttribute('Type');
@@ -143,9 +145,11 @@ final class HeaderFooterCopier implements HeaderFooterCopierInterface
     ): void {
         $root = $relsDom->documentElement;
 
+        // @codeCoverageIgnoreStart
         if ($root === null) {
             return;
         }
+        // @codeCoverageIgnoreEnd
 
         $relElement = $relsDom->createElementNS(XmlHelper::NS_REL, 'Relationship');
         $relElement->setAttribute('Id', $id);

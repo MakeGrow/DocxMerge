@@ -261,6 +261,65 @@ describe('SectionPropertiesApplier', function (): void {
             expect($pgSz->length)->toBe(1);
         });
 
+        it('filters text nodes inside sectPr when processing children', function (): void {
+            // Arrange
+            $nsW = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+            $nsR = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+
+            // XML com newlines entre children de sectPr para gerar text nodes
+            $documentXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+                . '<w:document xmlns:w="' . $nsW . '" xmlns:r="' . $nsR . '">'
+                . '<w:body>'
+                . "<w:p><w:pPr><w:sectPr>\n"
+                . "  <w:pgSz w:w=\"12240\" w:h=\"15840\"/>\n"
+                . "  <w:headerReference w:type=\"default\" r:id=\"rId3\"/>\n"
+                . "</w:sectPr></w:pPr></w:p>\n"
+                . '<w:sectPr/>'
+                . '</w:body>'
+                . '</w:document>';
+
+            $documentDom = createDomFromXml($documentXml);
+            $xpath = createXpathWithNamespaces($documentDom);
+
+            $bodyNodes = $xpath->query('//w:body');
+            assert($bodyNodes !== false && $bodyNodes->length > 0);
+            $body = $bodyNodes->item(0);
+            assert($body instanceof DOMElement);
+
+            $intermediateSectPrNodes = $xpath->query('//w:p/w:pPr/w:sectPr');
+            assert($intermediateSectPrNodes !== false && $intermediateSectPrNodes->length > 0);
+            $intermediateSectPr = $intermediateSectPrNodes->item(0);
+            assert($intermediateSectPr instanceof DOMElement);
+
+            $extractedContent = new ExtractedContent(
+                nodes: [],
+                finalSectPr: null,
+                intermediateSectPrElements: [$intermediateSectPr],
+                sectionCount: 2,
+            );
+
+            $headerFooterMap = new HeaderFooterMap([
+                'rId3' => new HeaderFooterMapping(
+                    oldId: 'rId3',
+                    newRelId: 'rId30',
+                    oldTarget: 'header1.xml',
+                    newFilename: 'header5.xml',
+                    type: 'default',
+                    isHeader: true,
+                ),
+            ]);
+
+            $applier = new SectionPropertiesApplier();
+
+            // Act -- should not throw despite text nodes in sectPr children
+            $applier->apply($documentDom, $body, $extractedContent, $headerFooterMap);
+
+            // Assert -- headerReference rId was remapped
+            $headerRef = $xpath->query('//w:headerReference/@r:id');
+            assert($headerRef !== false && $headerRef->length > 0);
+            expect($headerRef->item(0)?->nodeValue)->toBe('rId30');
+        });
+
         it('does nothing when the header footer map is empty', function (): void {
             // Arrange
             $nsW = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';

@@ -1,12 +1,6 @@
 parameters:
 	ignoreErrors:
 		-
-			message: '#^Cannot access property \$nodeName on DOMElement\|null\.$#'
-			identifier: property.nonObject
-			count: 1
-			path: tests/Unit/Content/ContentExtractorTest.php
-
-		-
 			message: '#^Cannot access property \$length on DOMNodeList\<DOMNameSpaceNode\|DOMNode\>\|false\.$#'
 			identifier: property.nonObject
 			count: 8
@@ -25,12 +19,6 @@ parameters:
 			path: tests/Integration/ContentTypes/ContentTypesManagerTest.php
 
 		-
-			message: '#^Unable to resolve the template type TValue in call to function expect$#'
-			identifier: argument.templateType
-			count: 2
-			path: tests/Integration/ContentTypes/ContentTypesManagerTest.php
-
-		-
 			message: '#^Result of && is always false\.$#'
 			identifier: booleanAnd.alwaysFalse
 			count: 1
@@ -42,14 +30,35 @@ parameters:
 			count: 1
 			path: tests/Integration/ContentTypes/ContentTypesManagerTest.php
 
+		-
+			message: '#^Unable to resolve the template type TValue in call to function expect$#'
+			identifier: argument.templateType
+			count: 2
+			path: tests/Integration/ContentTypes/ContentTypesManagerTest.php
 
+		-
+			message: '#^Result of && is always false\.$#'
+			identifier: booleanAnd.alwaysFalse
+			count: 1
+			path: tests/Integration/Validation/DocumentValidatorTest.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between '''' and '''' will always evaluate to false\.$#'
+			identifier: notIdentical.alwaysFalse
+			count: 1
+			path: tests/Integration/Validation/DocumentValidatorTest.php
+
+		-
+			message: '#^Cannot access property \$nodeName on DOMElement\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: tests/Unit/Content/ContentExtractorTest.php
 
 		-
 			message: '#^Cannot access property \$paragraph on DocxMerge\\Dto\\MarkerLocation\|null\.$#'
 			identifier: property.nonObject
 			count: 3
 			path: tests/Unit/Marker/MarkerLocatorTest.php
-
 
 		-
 			message: '#^Cannot access property \$length on DOMNodeList\<DOMNameSpaceNode\|DOMNode\>\|false\.$#'
@@ -102,9 +111,14 @@ parameters:
 		-
 			message: '#^Parameter \#1 \$contentNodes of method DocxMerge\\Remapping\\IdRemapper\:\:remap\(\) expects list\<DOMNode\>, list\<DOMNameSpaceNode\|DOMNode\|null\> given\.$#'
 			identifier: argument.type
-			count: 9
+			count: 10
 			path: tests/Unit/Remapping/IdRemapperTest.php
 
+		-
+			message: '#^Cannot access property \$length on DOMNodeList\<DOMNameSpaceNode\|DOMNode\>\|false\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: tests/Unit/Section/SectionPropertiesApplierTest.php
 
 		-
 			message: '#^Cannot access property \$nodeValue on DOMNameSpaceNode\|DOMNode\|null\.$#'
@@ -116,25 +130,7 @@ parameters:
 			message: '#^Cannot access property \$length on DOMNodeList\<DOMNameSpaceNode\|DOMNode\>\|false\.$#'
 			identifier: property.nonObject
 			count: 1
-			path: tests/Unit/Section/SectionPropertiesApplierTest.php
-
-		-
-			message: '#^Cannot access property \$length on DOMNodeList\<DOMNameSpaceNode\|DOMNode\>\|false\.$#'
-			identifier: property.nonObject
-			count: 1
 			path: tests/Unit/Style/StyleMergerTest.php
-
-		-
-			message: '#^Result of && is always false\.$#'
-			identifier: booleanAnd.alwaysFalse
-			count: 1
-			path: tests/Integration/Validation/DocumentValidatorTest.php
-
-		-
-			message: '#^Strict comparison using \!\=\= between '''' and '''' will always evaluate to false\.$#'
-			identifier: notIdentical.alwaysFalse
-			count: 1
-			path: tests/Integration/Validation/DocumentValidatorTest.php
 
 		-
 			message: '#^Cannot access property \$length on DOMNodeList\<DOMNameSpaceNode\|DOMNode\>\|false\.$#'

@@ -16,6 +16,8 @@ use DOMElement;
  * section where the marker was located) and intermediate sectPr elements
  * (embedded in imported content with headerReference/footerReference rIds
  * that need remapping).
+ *
+ * @codeCoverageIgnore
  */
 interface SectionPropertiesApplierInterface
 {

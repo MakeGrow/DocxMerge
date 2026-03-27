@@ -84,14 +84,18 @@ final class RelationshipManager implements RelationshipManagerInterface
         $mappings = [];
 
         $relNodes = $sourceXpath->query('//rel:Relationship');
+        // @codeCoverageIgnoreStart
         if ($relNodes === false) {
             return new RelationshipMap($mappings);
         }
+        // @codeCoverageIgnoreEnd
 
         foreach ($relNodes as $relNode) {
+            // @codeCoverageIgnoreStart
             if (!$relNode instanceof DOMElement) {
                 continue;
             }
+            // @codeCoverageIgnoreEnd
 
             $oldId = $relNode->getAttribute('Id');
             $type = $relNode->getAttribute('Type');
@@ -201,14 +205,18 @@ final class RelationshipManager implements RelationshipManagerInterface
         $index = [];
         $nodes = $targetXpath->query('//rel:Relationship');
 
+        // @codeCoverageIgnoreStart
         if ($nodes === false) {
             return $index;
         }
+        // @codeCoverageIgnoreEnd
 
         foreach ($nodes as $node) {
+            // @codeCoverageIgnoreStart
             if (!$node instanceof DOMElement) {
                 continue;
             }
+            // @codeCoverageIgnoreEnd
 
             $type = $node->getAttribute('Type');
             $target = $node->getAttribute('Target');
@@ -255,9 +263,11 @@ final class RelationshipManager implements RelationshipManagerInterface
         $ids = [];
         $nodes = $targetXpath->query('//rel:Relationship/@Id');
 
+        // @codeCoverageIgnoreStart
         if ($nodes === false) {
             return $ids;
         }
+        // @codeCoverageIgnoreEnd
 
         foreach ($nodes as $node) {
             $value = $node->nodeValue ?? '';

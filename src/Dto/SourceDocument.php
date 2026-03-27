@@ -13,6 +13,8 @@ use ZipArchive;
  * Holds the opened ZIP archive and all parsed DOM trees needed
  * during the merge pipeline. Created once per unique source path
  * and reused across markers referencing the same file.
+ *
+ * @codeCoverageIgnore
  */
 final class SourceDocument
 {

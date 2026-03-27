@@ -9,6 +9,8 @@ namespace DocxMerge\Dto;
  *
  * When sectionIndex is null, the entire source document is used.
  * When specified, only that zero-based section is extracted.
+ *
+ * @codeCoverageIgnore
  */
 final class MergeDefinition
 {

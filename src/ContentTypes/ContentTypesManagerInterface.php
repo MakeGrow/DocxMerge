@@ -14,6 +14,8 @@ use ZipArchive;
  * Implementations must ensure all parts in the ZIP have appropriate entries,
  * adding Default entries for file extensions and Override entries for
  * specific parts like headers and footers.
+ *
+ * @codeCoverageIgnore
  */
 interface ContentTypesManagerInterface
 {

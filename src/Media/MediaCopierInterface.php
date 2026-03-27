@@ -13,6 +13,8 @@ use ZipArchive;
  *
  * Implementations must generate new sequential filenames to avoid conflicts
  * and only copy files that are referenced by relationships in the map.
+ *
+ * @codeCoverageIgnore
  */
 interface MediaCopierInterface
 {

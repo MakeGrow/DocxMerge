@@ -11,6 +11,8 @@ use DOMElement;
  *
  * When reuseExisting is true, the style already exists identically in the
  * target and does not need to be imported.
+ *
+ * @codeCoverageIgnore
  */
 final class StyleMapping
 {

@@ -15,6 +15,8 @@ use DOMDocument;
  * HeaderFooterCopier) and structural relationships that should never be
  * duplicated, filtering to include only relationships actually referenced
  * in the content.
+ *
+ * @codeCoverageIgnore
  */
 interface RelationshipManagerInterface
 {

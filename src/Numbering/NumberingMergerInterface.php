@@ -14,6 +14,8 @@ use DOMDocument;
  * Implementations must filter to include only numbering definitions actually
  * referenced in the extracted content and maintain OOXML ordering requirements
  * (all w:abstractNum before all w:num).
+ *
+ * @codeCoverageIgnore
  */
 interface NumberingMergerInterface
 {

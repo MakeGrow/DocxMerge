@@ -127,14 +127,18 @@ final class XmlHelper
         $xpath = $this->createXpath($dom);
         $textNodes = $xpath->query('//w:t');
 
+        // @codeCoverageIgnoreStart
         if ($textNodes === false) {
             return;
         }
+        // @codeCoverageIgnoreEnd
 
         foreach ($textNodes as $textNode) {
+            // @codeCoverageIgnoreStart
             if (!$textNode instanceof \DOMElement) {
                 continue;
             }
+            // @codeCoverageIgnoreEnd
 
             $value = $textNode->nodeValue ?? '';
 

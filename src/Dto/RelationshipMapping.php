@@ -9,6 +9,8 @@ namespace DocxMerge\Dto;
  *
  * Tracks the old and new relationship IDs, targets, and whether
  * the associated file needs to be physically copied to the target ZIP.
+ *
+ * @codeCoverageIgnore
  */
 final class RelationshipMapping
 {

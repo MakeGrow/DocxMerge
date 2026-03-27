@@ -53,9 +53,11 @@ final class NumberingMerger implements NumberingMergerInterface
         $numNodes = $sourceXpath->query('//w:num');
         if ($numNodes !== false) {
             foreach ($numNodes as $numNode) {
+                // @codeCoverageIgnoreStart
                 if (!$numNode instanceof DOMElement) {
                     continue;
                 }
+                // @codeCoverageIgnoreEnd
                 $numId = (int) $numNode->getAttributeNS(XmlHelper::NS_W, 'numId');
                 $sourceNumsByNumId[$numId] = $numNode;
             }
@@ -67,9 +69,11 @@ final class NumberingMerger implements NumberingMergerInterface
         $abstractNumNodes = $sourceXpath->query('//w:abstractNum');
         if ($abstractNumNodes !== false) {
             foreach ($abstractNumNodes as $abstractNode) {
+                // @codeCoverageIgnoreStart
                 if (!$abstractNode instanceof DOMElement) {
                     continue;
                 }
+                // @codeCoverageIgnoreEnd
                 $absId = (int) $abstractNode->getAttributeNS(XmlHelper::NS_W, 'abstractNumId');
                 $sourceAbstractNumsById[$absId] = $abstractNode;
             }
@@ -110,9 +114,11 @@ final class NumberingMerger implements NumberingMergerInterface
                 if (isset($sourceAbstractNumsById[$oldAbstractNumId])) {
                     // Clone the abstractNum node and update its ID
                     $clonedAbstractNum = $sourceAbstractNumsById[$oldAbstractNumId]->cloneNode(true);
+                    // @codeCoverageIgnoreStart
                     if (!$clonedAbstractNum instanceof DOMElement) {
                         continue;
                     }
+                    // @codeCoverageIgnoreEnd
                     $clonedAbstractNum->setAttributeNS(XmlHelper::NS_W, 'w:abstractNumId', (string) $newAbstractNumId);
                     $abstractNumNodesToImport[] = $clonedAbstractNum;
                 }
@@ -120,24 +126,30 @@ final class NumberingMerger implements NumberingMergerInterface
 
             // Clone the num node and update its IDs
             $clonedNum = $numElement->cloneNode(true);
+            // @codeCoverageIgnoreStart
             if (!$clonedNum instanceof DOMElement) {
                 continue;
             }
+            // @codeCoverageIgnoreEnd
             $clonedNum->setAttributeNS(XmlHelper::NS_W, 'w:numId', (string) $newNumId);
 
             // Update the abstractNumId reference inside the cloned num
             $ownerDoc = $clonedNum->ownerDocument;
+            // @codeCoverageIgnoreStart
             if (!$ownerDoc instanceof DOMDocument) {
                 continue;
             }
+            // @codeCoverageIgnoreEnd
             $clonedXpath = new DOMXPath($ownerDoc);
             $clonedXpath->registerNamespace('w', XmlHelper::NS_W);
             $clonedAbsIdNodes = $clonedXpath->query('w:abstractNumId', $clonedNum);
             if ($clonedAbsIdNodes !== false && $clonedAbsIdNodes->length > 0) {
                 $absIdElement = $clonedAbsIdNodes->item(0);
+                // @codeCoverageIgnoreStart
                 if (!$absIdElement instanceof DOMElement) {
                     continue;
                 }
+                // @codeCoverageIgnoreEnd
                 $absIdElement->setAttributeNS(XmlHelper::NS_W, 'w:val', (string) $abstractNumMap[$oldAbstractNumId]);
             }
 

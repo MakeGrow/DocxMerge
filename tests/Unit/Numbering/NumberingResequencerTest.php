@@ -125,6 +125,83 @@ describe('NumberingResequencer', function (): void {
             expect($secondChild->localName)->toBe('num');
         });
 
+        it('handles an empty numbering DOM without errors', function (): void {
+            // Arrange
+            $resequencer = new NumberingResequencer();
+            $numberingDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<w:numbering xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"/>'
+            );
+            $documentDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+                . '<w:body><w:p><w:r><w:t>No lists</w:t></w:r></w:p><w:sectPr/></w:body>'
+                . '</w:document>'
+            );
+
+            // Act -- should not throw
+            $resequencer->resequence($numberingDom, $documentDom);
+
+            // Assert -- DOMs unchanged, no abstractNum or num added
+            $xpath = createXpathWithNamespaces($numberingDom);
+            $abstractNums = $xpath->query('//w:abstractNum');
+            assert($abstractNums !== false);
+            expect($abstractNums->length)->toBe(0);
+        });
+
+        it('returns early when numbering DOM has no document element', function (): void {
+            // Arrange
+            $resequencer = new NumberingResequencer();
+            $emptyNumberingDom = new DOMDocument();
+            $documentDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+                . '<w:body><w:p><w:r><w:t>Content</w:t></w:r></w:p><w:sectPr/></w:body>'
+                . '</w:document>'
+            );
+
+            // Act -- should return early without error
+            $resequencer->resequence($emptyNumberingDom, $documentDom);
+
+            // Assert -- document DOM is unchanged
+            $xpath = createXpathWithNamespaces($documentDom);
+            $text = $xpath->query('//w:t');
+            assert($text !== false);
+            expect($text->item(0)?->nodeValue)->toBe('Content');
+        });
+
+        it('handles a num element without an abstractNumId child', function (): void {
+            // Arrange
+            $resequencer = new NumberingResequencer();
+            $numberingDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<w:numbering xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+                . '<w:abstractNum w:abstractNumId="0"><w:lvl w:ilvl="0"/></w:abstractNum>'
+                . '<w:num w:numId="1"/>'
+                . '</w:numbering>'
+            );
+            $documentDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+                . '<w:body>'
+                . '<w:p><w:pPr><w:numPr><w:numId w:val="1"/></w:numPr></w:pPr></w:p>'
+                . '<w:sectPr/>'
+                . '</w:body></w:document>'
+            );
+
+            // Act -- should not throw
+            $resequencer->resequence($numberingDom, $documentDom);
+
+            // Assert -- num resequenced to numId="1", no abstractNumId child added
+            $xpath = createXpathWithNamespaces($numberingDom);
+            $nums = $xpath->query('//w:num');
+            assert($nums !== false);
+            expect($nums->length)->toBe(1);
+            $numNode = $nums->item(0);
+            assert($numNode instanceof DOMElement);
+            expect($numNode->getAttribute('w:numId'))->toBe('1');
+        });
+
         it('updates numId references in the document DOM', function (): void {
             // Arrange
             $resequencer = new NumberingResequencer();

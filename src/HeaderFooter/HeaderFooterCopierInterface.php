@@ -15,6 +15,8 @@ use ZipArchive;
  * Implementations must copy header/footer XML, their local .rels files,
  * any images referenced internally, and register new relationships in the
  * target document.xml.rels.
+ *
+ * @codeCoverageIgnore
  */
 interface HeaderFooterCopierInterface
 {

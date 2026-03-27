@@ -194,14 +194,18 @@ final class IdRemapper implements IdRemapperInterface
         IdTracker $idTracker,
     ): void {
         $docPrs = $xpath->query('.//wp:docPr', $node);
+        // @codeCoverageIgnoreStart
         if ($docPrs === false) {
             return;
         }
+        // @codeCoverageIgnoreEnd
 
         foreach ($docPrs as $docPr) {
+            // @codeCoverageIgnoreStart
             if (!$docPr instanceof DOMElement) {
                 continue;
             }
+            // @codeCoverageIgnoreEnd
             $newId = $idTracker->nextDocPrId();
             $docPr->setAttribute('id', (string) $newId);
         }
@@ -229,9 +233,11 @@ final class IdRemapper implements IdRemapperInterface
         $starts = $xpath->query('.//w:bookmarkStart', $node);
         if ($starts !== false) {
             foreach ($starts as $start) {
+                // @codeCoverageIgnoreStart
                 if (!$start instanceof DOMElement) {
                     continue;
                 }
+                // @codeCoverageIgnoreEnd
                 $oldId = $start->getAttributeNS(XmlHelper::NS_W, 'id');
                 if ($oldId === '') {
                     continue;
@@ -249,9 +255,11 @@ final class IdRemapper implements IdRemapperInterface
         $ends = $xpath->query('.//w:bookmarkEnd', $node);
         if ($ends !== false) {
             foreach ($ends as $end) {
+                // @codeCoverageIgnoreStart
                 if (!$end instanceof DOMElement) {
                     continue;
                 }
+                // @codeCoverageIgnoreEnd
                 $oldId = $end->getAttributeNS(XmlHelper::NS_W, 'id');
                 if ($oldId === '') {
                     continue;

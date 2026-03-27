@@ -184,6 +184,34 @@ describe('StyleMerger', function (): void {
             expect($styles->length)->toBe(1);
         });
 
+        it('returns zero when the target styles DOM has no document element', function (): void {
+            // Arrange
+            $merger = new StyleMerger();
+            $emptyTargetDom = new DOMDocument();
+            // Nao carregar nenhum XML -- documentElement sera null
+
+            // Criar StyleMap com pelo menos um estilo para importar
+            $sourceDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+                . '<w:style w:type="paragraph" w:styleId="Custom">'
+                . '<w:name w:val="Custom"/><w:pPr><w:spacing w:after="200"/></w:pPr>'
+                . '</w:style>'
+                . '</w:styles>'
+            );
+            $targetForMap = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"/>'
+            );
+            $styleMap = $merger->buildMap($sourceDom, $targetForMap);
+
+            // Act -- merge into empty DOM (no documentElement)
+            $result = $merger->merge($emptyTargetDom, $styleMap);
+
+            // Assert
+            expect($result)->toBe(0);
+        });
+
         it('does not import a reused style', function (): void {
             // Arrange
             $merger = new StyleMerger();

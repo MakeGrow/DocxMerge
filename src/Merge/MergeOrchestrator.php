@@ -327,18 +327,22 @@ final class MergeOrchestrator
         }
 
         $tempFile = tempnam(sys_get_temp_dir(), 'docx_merge_');
+        // @codeCoverageIgnoreStart
         if ($tempFile === false) {
             throw new MergeException('Failed to create temporary file.');
         }
+        // @codeCoverageIgnoreEnd
 
         $tempPath = $tempFile . '.docx';
 
         $copied = copy($sourcePath, $tempPath);
+        // @codeCoverageIgnoreStart
         if ($copied === false) {
             throw new InvalidTemplateException(
                 "Failed to copy template to working location: {$sourcePath}"
             );
         }
+        // @codeCoverageIgnoreEnd
 
         // Remove the tempnam file without extension
         if (file_exists($tempFile) && $tempFile !== $tempPath) {
@@ -655,9 +659,11 @@ final class MergeOrchestrator
     private function serializeDom(ZipArchive $zip, string $partName, DOMDocument $dom): void
     {
         $xml = $dom->saveXML();
+        // @codeCoverageIgnoreStart
         if ($xml === false) {
             throw new MergeException("Failed to serialize DOM for part: {$partName}");
         }
+        // @codeCoverageIgnoreEnd
 
         $zip->addFromString($partName, $xml);
     }
@@ -679,9 +685,11 @@ final class MergeOrchestrator
         $outputDir = dirname($outputPath);
         if (!is_dir($outputDir)) {
             $created = mkdir($outputDir, 0755, true);
+            // @codeCoverageIgnoreStart
             if ($created === false) {
                 throw new MergeException("Failed to create output directory: {$outputDir}");
             }
+            // @codeCoverageIgnoreEnd
         }
 
         // Try rename first (atomic and fast on same filesystem)
@@ -689,9 +697,11 @@ final class MergeOrchestrator
         if ($renamed === false) {
             // Fallback to copy+unlink for cross-filesystem moves
             $copied = copy($tempPath, $outputPath);
+            // @codeCoverageIgnoreStart
             if ($copied === false) {
                 throw new MergeException("Failed to move output file to: {$outputPath}");
             }
+            // @codeCoverageIgnoreEnd
             unlink($tempPath);
         }
     }

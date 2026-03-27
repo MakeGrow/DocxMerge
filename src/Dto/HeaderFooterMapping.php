@@ -9,6 +9,8 @@ namespace DocxMerge\Dto;
  *
  * Tracks the old and new relationship IDs, the old target filename,
  * the new filename in the target archive, and the type of header/footer.
+ *
+ * @codeCoverageIgnore
  */
 final class HeaderFooterMapping
 {

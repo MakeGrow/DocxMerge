@@ -73,9 +73,11 @@ final class IdTracker
 
         $nodes = $xpath->query('//rel:Relationship/@Id');
 
+        // @codeCoverageIgnoreStart
         if ($nodes === false) {
             return;
         }
+        // @codeCoverageIgnoreEnd
 
         $max = 0;
         foreach ($nodes as $node) {
@@ -177,9 +179,11 @@ final class IdTracker
 
         $nodes = $xpath->query('//wp:docPr/@id');
 
+        // @codeCoverageIgnoreStart
         if ($nodes === false) {
             return;
         }
+        // @codeCoverageIgnoreEnd
 
         $max = 0;
         foreach ($nodes as $node) {
@@ -204,9 +208,11 @@ final class IdTracker
 
         $nodes = $xpath->query('//w:bookmarkStart/@w:id');
 
+        // @codeCoverageIgnoreStart
         if ($nodes === false) {
             return;
         }
+        // @codeCoverageIgnoreEnd
 
         $max = 0;
         foreach ($nodes as $node) {

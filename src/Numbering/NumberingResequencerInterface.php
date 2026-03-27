@@ -12,6 +12,8 @@ use DOMDocument;
  * Implementations must renumber all abstractNumId and numId values sequentially,
  * reorder DOM nodes so that all w:abstractNum precede all w:num, and update
  * all w:numId references in the document DOM.
+ *
+ * @codeCoverageIgnore
  */
 interface NumberingResequencerInterface
 {

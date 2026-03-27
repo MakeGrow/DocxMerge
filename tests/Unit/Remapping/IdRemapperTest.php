@@ -410,6 +410,48 @@ describe('IdRemapper', function (): void {
             expect($newId)->toBeGreaterThan(0);
         });
 
+        it('leaves r:embed unchanged when no mapping exists for the rId', function (): void {
+            // Arrange
+            $remapper = new IdRemapper();
+            $dom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"'
+                . ' xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+                . '<w:body>'
+                . '<w:p><w:r><w:drawing><a:blip xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"'
+                . ' r:embed="rId5"/></w:drawing></w:r></w:p>'
+                . '<w:sectPr/>'
+                . '</w:body></w:document>'
+            );
+            $xpath = createXpathWithNamespaces($dom);
+            $paragraphs = $xpath->query('//w:p');
+            assert($paragraphs !== false);
+            /** @var list<DOMNode> $nodes */
+            $nodes = [];
+            for ($i = 0; $i < $paragraphs->length; $i++) {
+                $nodes[] = $paragraphs->item($i);
+            }
+
+            // Empty relationship map -- no mapping for rId5
+            $relMap = new RelationshipMap([]);
+            $styleMap = new StyleMap([]);
+            $numberingMap = new NumberingMap(
+                abstractNumMap: [],
+                numMap: [],
+                abstractNumNodes: [],
+                numNodes: [],
+            );
+            $idTracker = new IdTracker();
+
+            // Act
+            $remapper->remap($nodes, $relMap, $styleMap, $numberingMap, $idTracker, $dom);
+
+            // Assert -- r:embed still has original value
+            $embeds = $xpath->query('//a:blip/@r:embed');
+            assert($embeds !== false && $embeds->length > 0);
+            expect($embeds->item(0)?->nodeValue)->toBe('rId5');
+        });
+
         it('handles empty content nodes without error', function (): void {
             // Arrange
             $remapper = new IdRemapper();

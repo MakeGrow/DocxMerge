@@ -13,6 +13,8 @@ use DocxMerge\Merge\MergeContext;
  * Implementations must check that all rIds resolve, all numIds exist,
  * all style references are valid, all header/footer files exist,
  * and all ZIP parts have Content_Types entries.
+ *
+ * @codeCoverageIgnore
  */
 interface DocumentValidatorInterface
 {

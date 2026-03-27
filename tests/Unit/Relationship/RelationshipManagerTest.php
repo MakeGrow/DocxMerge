@@ -11,6 +11,7 @@ declare(strict_types=1);
  */
 
 use DocxMerge\Dto\RelationshipMap;
+use DocxMerge\Dto\RelationshipMapping;
 use DocxMerge\Relationship\RelationshipManager;
 use DocxMerge\Tracking\IdTracker;
 
@@ -208,6 +209,70 @@ describe('RelationshipManager', function (): void {
     });
 
     describe('addRelationships()', function (): void {
+        it('does not add a relationship when the new rId already exists in target', function (): void {
+            // Arrange
+            $manager = new RelationshipManager();
+
+            // Source com image rId1 que tem mesmo Type+Target que target rId10
+            $sourceRelsDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+                . '<Relationship Id="rId1"'
+                . ' Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image"'
+                . ' Target="media/image1.png"/>'
+                . '</Relationships>'
+            );
+            $targetRelsDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+                . '<Relationship Id="rId10"'
+                . ' Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image"'
+                . ' Target="media/image1.png"/>'
+                . '</Relationships>'
+            );
+            // Content references rId1
+            $contentXml = '<a:blip xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"'
+                . ' xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"'
+                . ' r:embed="rId1"/>';
+            $idTracker = new IdTracker();
+
+            // Build map -- rId1 should be mapped to rId10 (reuse by Type+Target match)
+            $map = $manager->buildMap($sourceRelsDom, $targetRelsDom, $contentXml, $idTracker);
+
+            // Act
+            $manager->addRelationships($targetRelsDom, $map);
+
+            // Assert -- target still has exactly 1 Relationship (no duplicate)
+            $xpath = createXpathWithNamespaces($targetRelsDom);
+            $rels = $xpath->query('//rel:Relationship');
+            assert($rels !== false);
+            expect($rels->length)->toBe(1);
+        });
+
+        it('does nothing when the target rels DOM has no document element', function (): void {
+            // Arrange
+            $manager = new RelationshipManager();
+            $emptyRelsDom = new DOMDocument();
+
+            $relMap = new RelationshipMap([
+                'rId1' => new RelationshipMapping(
+                    oldId: 'rId1',
+                    newId: 'rId50',
+                    type: 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/image',
+                    target: 'media/image1.png',
+                    newTarget: 'media/image1.png',
+                    needsFileCopy: true,
+                    isExternal: false,
+                ),
+            ]);
+
+            // Act -- should not throw
+            $manager->addRelationships($emptyRelsDom, $relMap);
+
+            // Assert -- DOM still has no documentElement (nothing happened)
+            expect($emptyRelsDom->documentElement)->toBeNull();
+        });
+
         it('adds new relationship elements to the target rels DOM', function (): void {
             // Arrange
             $manager = new RelationshipManager();

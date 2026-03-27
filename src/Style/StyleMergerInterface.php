@@ -13,6 +13,8 @@ use DOMDocument;
  * Implementations must detect identical styles by content hash comparison,
  * resolve ID conflicts by generating sequential numeric IDs, and update
  * basedOn/next/link references in imported styles.
+ *
+ * @codeCoverageIgnore
  */
 interface StyleMergerInterface
 {

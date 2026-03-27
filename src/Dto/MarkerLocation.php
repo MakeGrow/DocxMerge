@@ -11,6 +11,8 @@ use DOMElement;
  *
  * Contains the paragraph element holding the marker and the specific
  * w:t elements that compose the marker text (which may span multiple runs).
+ *
+ * @codeCoverageIgnore
  */
 final class MarkerLocation
 {

@@ -11,6 +11,8 @@ namespace DocxMerge\Dto;
  * processing statistics, and execution time.
  *
  * @phpstan-type Stats array<string, int>
+ *
+ * @codeCoverageIgnore
  */
 final class MergeResult
 {

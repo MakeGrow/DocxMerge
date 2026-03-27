@@ -17,6 +17,8 @@ use DOMNode;
  * Implementations must process relationship IDs, style IDs, numbering IDs,
  * drawing object property IDs, and bookmark IDs to prevent collisions
  * with existing IDs in the target document.
+ *
+ * @codeCoverageIgnore
  */
 interface IdRemapperInterface
 {

@@ -12,6 +12,8 @@ use DOMDocument;
  *
  * Implementations must handle markers split across multiple w:r/w:t elements
  * by reconstructing the full text of each paragraph.
+ *
+ * @codeCoverageIgnore
  */
 interface MarkerLocatorInterface
 {

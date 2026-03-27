@@ -56,14 +56,18 @@ final class StyleMerger implements StyleMergerInterface
         $mappings = [];
 
         $sourceStyles = $sourceXpath->query('//w:style');
+        // @codeCoverageIgnoreStart
         if ($sourceStyles === false) {
             return new StyleMap($mappings);
         }
+        // @codeCoverageIgnoreEnd
 
         foreach ($sourceStyles as $styleNode) {
+            // @codeCoverageIgnoreStart
             if (!$styleNode instanceof DOMElement) {
                 continue;
             }
+            // @codeCoverageIgnoreEnd
 
             $oldId = $styleNode->getAttributeNS(XmlHelper::NS_W, 'styleId');
             if ($oldId === '') {
@@ -184,14 +188,18 @@ final class StyleMerger implements StyleMergerInterface
         $index = [];
         $styles = $xpath->query('//w:style');
 
+        // @codeCoverageIgnoreStart
         if ($styles === false) {
             return $index;
         }
+        // @codeCoverageIgnoreEnd
 
         foreach ($styles as $styleNode) {
+            // @codeCoverageIgnoreStart
             if (!$styleNode instanceof DOMElement) {
                 continue;
             }
+            // @codeCoverageIgnoreEnd
 
             $styleId = $styleNode->getAttributeNS(XmlHelper::NS_W, 'styleId');
             if ($styleId === '') {
@@ -216,14 +224,18 @@ final class StyleMerger implements StyleMergerInterface
         $set = [];
         $styles = $xpath->query('//w:style');
 
+        // @codeCoverageIgnoreStart
         if ($styles === false) {
             return $set;
         }
+        // @codeCoverageIgnoreEnd
 
         foreach ($styles as $styleNode) {
+            // @codeCoverageIgnoreStart
             if (!$styleNode instanceof DOMElement) {
                 continue;
             }
+            // @codeCoverageIgnoreEnd
 
             $styleId = $styleNode->getAttributeNS(XmlHelper::NS_W, 'styleId');
             if ($styleId !== '') {
@@ -250,9 +262,11 @@ final class StyleMerger implements StyleMergerInterface
         // Clone to avoid mutating the original DOM.
         $clone = $styleNode->cloneNode(true);
 
+        // @codeCoverageIgnoreStart
         if (!$clone instanceof DOMElement) {
             return hash('sha256', '');
         }
+        // @codeCoverageIgnoreEnd
 
         // Remove metadata attributes that do not affect visual definition.
         $clone->removeAttributeNS(XmlHelper::NS_W, 'styleId');
@@ -268,9 +282,11 @@ final class StyleMerger implements StyleMergerInterface
             ? $ownerDoc->saveXML($clone)
             : '';
 
+        // @codeCoverageIgnoreStart
         if ($xml === false) {
             $xml = '';
         }
+        // @codeCoverageIgnoreEnd
 
         // Normalize whitespace for consistent hashing.
         $normalized = preg_replace('/\s+/', ' ', trim($xml));

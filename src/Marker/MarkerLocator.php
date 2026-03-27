@@ -43,34 +43,42 @@ final class MarkerLocator implements MarkerLocatorInterface
 
         $paragraphs = $xpath->query('//w:p');
 
+        // @codeCoverageIgnoreStart
         if ($paragraphs === false) {
             return null;
         }
+        // @codeCoverageIgnoreEnd
 
         // The full marker string to search for within concatenated paragraph text.
         $markerString = '${' . $markerName . '}';
 
         foreach ($paragraphs as $paragraph) {
+            // @codeCoverageIgnoreStart
             if (!$paragraph instanceof DOMElement) {
                 continue;
             }
+            // @codeCoverageIgnoreEnd
 
             // Collect all w:t descendants and concatenate their text to handle
             // markers split across multiple w:r/w:t elements by Word.
             $textNodes = $xpath->query('.//w:t', $paragraph);
 
+            // @codeCoverageIgnoreStart
             if ($textNodes === false) {
                 continue;
             }
+            // @codeCoverageIgnoreEnd
 
             $fullText = '';
             /** @var list<DOMElement> $textElements */
             $textElements = [];
 
             foreach ($textNodes as $textNode) {
+                // @codeCoverageIgnoreStart
                 if (!$textNode instanceof DOMElement) {
                     continue;
                 }
+                // @codeCoverageIgnoreEnd
 
                 $fullText .= $textNode->nodeValue ?? '';
                 $textElements[] = $textNode;

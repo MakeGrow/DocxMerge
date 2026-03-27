@@ -65,7 +65,9 @@ final class HeaderFooterCopier implements HeaderFooterCopierInterface
         }
 
         foreach ($headerRels as $relNode) {
-            assert($relNode instanceof DOMElement);
+            if (!$relNode instanceof DOMElement) {
+                continue;
+            }
 
             $oldId = $relNode->getAttribute('Id');
             $type = $relNode->getAttribute('Type');

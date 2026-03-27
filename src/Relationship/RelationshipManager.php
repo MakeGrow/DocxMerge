@@ -236,7 +236,7 @@ final class RelationshipManager implements RelationshipManagerInterface
         // Match rId references in any attribute value
         preg_match_all('/\brId\d+\b/', $contentXml, $matches);
 
-        if (empty($matches[0])) {
+        if ($matches[0] === []) {
             return [];
         }
 

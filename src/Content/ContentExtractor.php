@@ -126,7 +126,9 @@ final class ContentExtractor implements ContentExtractorInterface
         }
 
         $body = $bodies->item(0);
-        assert($body instanceof DOMElement);
+        if (!$body instanceof DOMElement) {
+            throw new InvalidSourceException('Source document w:body is not a valid element.');
+        }
 
         return $body;
     }
@@ -209,7 +211,9 @@ final class ContentExtractor implements ContentExtractorInterface
             $sectPrNodes = $xpath->query('w:pPr/w:sectPr', $node);
             if ($sectPrNodes !== false && $sectPrNodes->length > 0) {
                 $sectPr = $sectPrNodes->item(0);
-                assert($sectPr instanceof DOMElement);
+                if (!$sectPr instanceof DOMElement) {
+                    continue;
+                }
                 $intermediate[] = $sectPr;
             }
         }

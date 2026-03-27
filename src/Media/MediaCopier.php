@@ -6,6 +6,7 @@ namespace DocxMerge\Media;
 
 use DocxMerge\Dto\RelationshipMap;
 use DocxMerge\Tracking\IdTracker;
+use DocxMerge\Zip\ZipHelper;
 use ZipArchive;
 
 /**
@@ -14,9 +15,23 @@ use ZipArchive;
  * Iterates through the RelationshipMap and copies only the files that
  * are flagged as needing a file copy. Generates sequential filenames
  * using the IdTracker to avoid collisions with existing media files.
+ *
+ * All source paths are validated through ZipHelper::sanitizePath() to
+ * prevent Zip Slip (directory traversal) attacks before reading from
+ * the source archive.
  */
 final class MediaCopier implements MediaCopierInterface
 {
+    /**
+     * @param ZipHelper $zipHelper Helper for safe ZIP path operations.
+     *
+     * @see ZipHelper::sanitizePath()
+     */
+    public function __construct(
+        private readonly ZipHelper $zipHelper = new ZipHelper(),
+    ) {
+    }
+
     /**
      * Copies media files from source to target ZIP.
      *
@@ -42,6 +57,9 @@ final class MediaCopier implements MediaCopierInterface
         $filesToCopy = $relationshipMap->getFilesToCopy();
 
         foreach ($filesToCopy as $mapping) {
+            // Validate target path to prevent directory traversal attacks
+            $this->zipHelper->sanitizePath($mapping->target);
+
             $sourcePath = 'word/' . $mapping->target;
             $content = $sourceZip->getFromName($sourcePath);
 

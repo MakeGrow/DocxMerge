@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 use DocxMerge\Dto\RelationshipMap;
 use DocxMerge\Dto\RelationshipMapping;
+use DocxMerge\Exception\InvalidSourceException;
 use DocxMerge\Media\MediaCopier;
 use DocxMerge\Tracking\IdTracker;
 
@@ -236,6 +237,52 @@ describe('MediaCopier', function (): void {
             // Assert
             expect($targetMap)->toHaveKey('media/photo.png');
             expect($targetMap['media/photo.png'])->toBe('media/image1.png');
+
+            $sourceZip->close();
+            $targetZip->close();
+        });
+
+        it('throws on path traversal in media target', function () use (&$tempFiles): void {
+            // Arrange
+            $sourcePath = tempnam(sys_get_temp_dir(), 'src_zip_') . '.zip';
+            $targetPath = tempnam(sys_get_temp_dir(), 'tgt_zip_') . '.zip';
+            /** @var list<string> $tempFiles */
+            $tempFiles[] = $sourcePath;
+            $tempFiles[] = $targetPath;
+
+            $sourceZip = new ZipArchive();
+            $sourceZip->open($sourcePath, ZipArchive::CREATE);
+            $sourceZip->addFromString('word/media/../../../etc/passwd', 'malicious');
+            $sourceZip->close();
+
+            $targetZip = new ZipArchive();
+            $targetZip->open($targetPath, ZipArchive::CREATE);
+            $targetZip->addFromString('word/document.xml', '<w:document/>');
+            $targetZip->close();
+
+            $sourceZip = new ZipArchive();
+            $sourceZip->open($sourcePath);
+            $targetZip = new ZipArchive();
+            $targetZip->open($targetPath);
+
+            $relationshipMap = new RelationshipMap([
+                'rId2' => new RelationshipMapping(
+                    oldId: 'rId2',
+                    newId: 'rId10',
+                    type: 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/image',
+                    target: 'media/../../../etc/passwd',
+                    newTarget: 'media/../../../etc/passwd',
+                    needsFileCopy: true,
+                    isExternal: false,
+                ),
+            ]);
+
+            $idTracker = new IdTracker();
+            $copier = new MediaCopier();
+
+            // Act + Assert
+            expect(fn () => $copier->copy($sourceZip, $targetZip, $relationshipMap, $idTracker))
+                ->toThrow(InvalidSourceException::class);
 
             $sourceZip->close();
             $targetZip->close();

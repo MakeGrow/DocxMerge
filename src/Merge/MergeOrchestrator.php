@@ -42,6 +42,8 @@ use DocxMerge\Xml\XmlHelper;
 use DOMDocument;
 use DOMElement;
 use DOMNode;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use ZipArchive;
 
 /**
@@ -82,6 +84,8 @@ final class MergeOrchestrator
 
     private readonly XmlHelper $xmlHelper;
 
+    private readonly LoggerInterface $logger;
+
     /**
      * @param MarkerLocatorInterface|null $markerLocator Marker locator service.
      * @param ContentExtractorInterface|null $contentExtractor Content extractor service.
@@ -96,6 +100,7 @@ final class MergeOrchestrator
      * @param ContentTypesManagerInterface|null $contentTypesManager Content types manager.
      * @param DocumentValidatorInterface|null $documentValidator Document validator service.
      * @param XmlHelper|null $xmlHelper XML helper for DOM creation and whitespace preservation.
+     * @param LoggerInterface|null $logger PSR-3 logger for diagnostic output. Defaults to NullLogger.
      */
     public function __construct(
         ?MarkerLocatorInterface $markerLocator = null,
@@ -111,6 +116,7 @@ final class MergeOrchestrator
         ?ContentTypesManagerInterface $contentTypesManager = null,
         ?DocumentValidatorInterface $documentValidator = null,
         ?XmlHelper $xmlHelper = null,
+        ?LoggerInterface $logger = null,
     ) {
         $this->markerLocator = $markerLocator ?? new MarkerLocator();
         $this->contentExtractor = $contentExtractor ?? new ContentExtractor();
@@ -125,6 +131,7 @@ final class MergeOrchestrator
         $this->contentTypesManager = $contentTypesManager ?? new ContentTypesManager();
         $this->documentValidator = $documentValidator ?? new DocumentValidator();
         $this->xmlHelper = $xmlHelper ?? new XmlHelper();
+        $this->logger = $logger ?? new NullLogger();
     }
 
     /**
@@ -153,6 +160,11 @@ final class MergeOrchestrator
         MergeOptions $options,
     ): MergeResult {
         $startTime = microtime(true);
+
+        $this->logger->debug('MergeOrchestrator: starting merge pipeline.', [
+            'templatePath' => $templatePath,
+            'definitionCount' => count($definitions),
+        ]);
 
         // --- Phase 1: Create working copy of the template ---
         $tempPath = $this->createWorkingCopy($templatePath, $options);

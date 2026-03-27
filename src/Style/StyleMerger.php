@@ -26,13 +26,6 @@ final class StyleMerger implements StyleMergerInterface
     private const RENAMED_ID_BASE = 1000;
 
     /**
-     * Counter for generating unique renamed style IDs within a single buildMap call.
-     *
-     * @var int
-     */
-    private int $renameCounter = 0;
-
-    /**
      * Builds a mapping from source style IDs to target style IDs.
      *
      * For each target style, computes a normalized content hash. For each source
@@ -49,7 +42,7 @@ final class StyleMerger implements StyleMergerInterface
         DOMDocument $sourceStylesDom,
         DOMDocument $targetStylesDom,
     ): StyleMap {
-        $this->renameCounter = 0;
+        $localCounter = 0;
 
         $targetXpath = $this->createStyleXpath($targetStylesDom);
         $sourceXpath = $this->createStyleXpath($sourceStylesDom);
@@ -93,7 +86,7 @@ final class StyleMerger implements StyleMergerInterface
                     );
                 } else {
                     // Different definition with same ID -- rename to avoid conflict.
-                    $newId = $this->generateUniqueId($targetIdSet);
+                    $newId = $this->generateUniqueId($targetIdSet, $localCounter);
                     $mappings[$oldId] = new StyleMapping(
                         oldId: $oldId,
                         newId: $newId,
@@ -318,14 +311,15 @@ final class StyleMerger implements StyleMergerInterface
      * Uses a sequential numeric suffix starting from RENAMED_ID_BASE (1000).
      *
      * @param array<string, true> $existingIds Set of IDs already in use.
+     * @param int                 $counter     Counter passed by reference, incremented on each call.
      *
      * @return string A new unique style ID (e.g., "Style1000", "Style1001").
      */
-    private function generateUniqueId(array $existingIds): string
+    private function generateUniqueId(array $existingIds, int &$counter): string
     {
         do {
-            $candidate = 'Style' . (self::RENAMED_ID_BASE + $this->renameCounter);
-            $this->renameCounter++;
+            $candidate = 'Style' . (self::RENAMED_ID_BASE + $counter);
+            $counter++;
         } while (isset($existingIds[$candidate]));
 
         return $candidate;

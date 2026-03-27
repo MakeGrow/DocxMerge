@@ -287,6 +287,41 @@ describe('DocxMerger', function (): void {
             $zip->close();
         });
 
+        it('propagates logger to the orchestrator', function () use (&$output): void {
+            // Arrange
+            $output = tempnam(sys_get_temp_dir(), 'docx_test_') . '.docx';
+
+            /** @var list<array{level: string, message: string}> $logs */
+            $logs = [];
+            $logger = new class ($logs) extends \Psr\Log\AbstractLogger {
+                /** @param list<array{level: string, message: string}> $logs */
+                public function __construct(
+                    /** @phpstan-ignore property.onlyWritten (read via by-reference binding in outer scope) */
+                    private array &$logs,
+                ) {
+                }
+
+                public function log($level, string|\Stringable $message, array $context = []): void
+                {
+                    $this->logs[] = ['level' => (string) $level, 'message' => (string) $message];
+                }
+            };
+
+            $merger = new DocxMerger(logger: $logger);
+
+            // Act
+            $result = $merger->merge(
+                templatePath: fixture('template-simple.docx'),
+                merges: ['CONTENT' => fixture('source-simple.docx')],
+                outputPath: $output,
+            );
+
+            // Assert -- the facade itself logs "Starting merge operation"
+            expect($result->success)->toBeTrue();
+            $debugMessages = array_filter($logs, fn ($log) => $log['level'] === 'debug');
+            expect($debugMessages)->not->toBeEmpty();
+        });
+
         it('handles source with multiple sections via MergeDefinition', function () use (&$output): void {
             // Arrange
             $output = tempnam(sys_get_temp_dir(), 'docx_test_') . '.docx';

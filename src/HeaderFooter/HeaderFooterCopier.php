@@ -8,6 +8,7 @@ use DocxMerge\Dto\HeaderFooterMap;
 use DocxMerge\Dto\HeaderFooterMapping;
 use DocxMerge\Tracking\IdTracker;
 use DocxMerge\Xml\XmlHelper;
+use DocxMerge\Zip\ZipHelper;
 use DOMDocument;
 use DOMElement;
 use DOMXPath;
@@ -19,6 +20,10 @@ use ZipArchive;
  * For each header/footer relationship found in the source document.xml.rels,
  * reads the XML content, generates a new sequential filename, adds a new
  * relationship in the target rels DOM, and writes the file to the target ZIP.
+ *
+ * All source paths are validated through ZipHelper::sanitizePath() to
+ * prevent Zip Slip (directory traversal) attacks before reading from
+ * the source archive.
  */
 final class HeaderFooterCopier implements HeaderFooterCopierInterface
 {
@@ -27,6 +32,16 @@ final class HeaderFooterCopier implements HeaderFooterCopierInterface
 
     /** Relationship type URI for footers. */
     private const FOOTER_TYPE = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer';
+
+    /**
+     * @param ZipHelper $zipHelper Helper for safe ZIP path operations.
+     *
+     * @see ZipHelper::sanitizePath()
+     */
+    public function __construct(
+        private readonly ZipHelper $zipHelper = new ZipHelper(),
+    ) {
+    }
 
     /**
      * Copies headers and footers from source to target.
@@ -72,6 +87,10 @@ final class HeaderFooterCopier implements HeaderFooterCopierInterface
             $oldId = $relNode->getAttribute('Id');
             $type = $relNode->getAttribute('Type');
             $target = $relNode->getAttribute('Target');
+
+            // Validate target path to prevent directory traversal attacks
+            $this->zipHelper->sanitizePath($target);
+
             $isHeader = ($type === self::HEADER_TYPE);
 
             // Read the header/footer XML from source ZIP

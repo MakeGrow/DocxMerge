@@ -101,6 +101,37 @@ describe('StyleMerger', function (): void {
             expect($map->getNewId('Heading1'))->not->toBe('Heading1');
             expect($map->isReused('Heading1'))->toBeFalse();
         });
+        it('produces consistent IDs when buildMap is called multiple times on the same instance', function (): void {
+            // Arrange
+            $merger = new StyleMerger();
+            $targetDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+                . '<w:style w:type="paragraph" w:styleId="Heading1">'
+                . '<w:name w:val="heading 1"/>'
+                . '<w:pPr><w:spacing w:after="100"/></w:pPr>'
+                . '</w:style>'
+                . '</w:styles>'
+            );
+            $sourceDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+                . '<w:style w:type="paragraph" w:styleId="Heading1">'
+                . '<w:name w:val="heading 1"/>'
+                . '<w:pPr><w:spacing w:after="999"/></w:pPr>'
+                . '</w:style>'
+                . '</w:styles>'
+            );
+
+            // Act -- call buildMap twice on the same instance
+            $map1 = $merger->buildMap($sourceDom, $targetDom);
+            $map2 = $merger->buildMap($sourceDom, $targetDom);
+
+            // Assert -- both calls should produce the same ID (Style1000)
+            // because the counter should reset to 0 on each call.
+            expect($map1->getNewId('Heading1'))->toBe($map2->getNewId('Heading1'));
+        });
+
         it('returns an empty map when source has no styles', function (): void {
             // Arrange
             $merger = new StyleMerger();

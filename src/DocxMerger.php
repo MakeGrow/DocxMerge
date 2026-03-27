@@ -80,7 +80,7 @@ final class DocxMerger
         $definitions = $this->normalizeDefinitions($merges);
 
         // Create the orchestrator with default concrete services
-        $orchestrator = new MergeOrchestrator();
+        $orchestrator = new MergeOrchestrator(logger: $this->logger);
 
         return $orchestrator->execute(
             $templatePath,

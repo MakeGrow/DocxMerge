@@ -18,3 +18,5 @@ samples/output/*.docx
 /.claude
 CLAUDE.md
 /.github/agents
+/coverage-report
+coverage.xml

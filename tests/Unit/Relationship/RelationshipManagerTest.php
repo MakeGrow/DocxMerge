@@ -1,0 +1,305 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * Tests for RelationshipManager.
+ *
+ * Verifies relationship mapping between source and target documents,
+ * including filtering by content reference, exclusion of structural
+ * and header/footer relationships, and duplicate detection.
+ */
+
+use DocxMerge\Dto\RelationshipMap;
+use DocxMerge\Dto\RelationshipMapping;
+use DocxMerge\Relationship\RelationshipManager;
+use DocxMerge\Tracking\IdTracker;
+
+describe('RelationshipManager', function (): void {
+    describe('buildMap()', function (): void {
+        it('maps an image relationship referenced in the content', function (): void {
+            // Arrange
+            $manager = new RelationshipManager();
+            $sourceRelsDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+                . '<Relationship Id="rId1"'
+                . ' Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image"'
+                . ' Target="media/image1.png"/>'
+                . '</Relationships>'
+            );
+            $targetRelsDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"/>'
+            );
+            // Content references rId1
+            $contentXml = '<w:drawing xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"'
+                . ' xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+                . '<a:blip r:embed="rId1"/></w:drawing>';
+            $idTracker = new IdTracker();
+
+            // Act
+            $map = $manager->buildMap($sourceRelsDom, $targetRelsDom, $contentXml, $idTracker);
+
+            // Assert
+            expect($map)->toBeInstanceOf(RelationshipMap::class);
+            expect($map->getNewId('rId1'))->not->toBeNull();
+        });
+
+        it('excludes structural relationships like styles and settings', function (): void {
+            // Arrange
+            $manager = new RelationshipManager();
+            $sourceRelsDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+                . '<Relationship Id="rId1"'
+                . ' Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles"'
+                . ' Target="styles.xml"/>'
+                . '<Relationship Id="rId2"'
+                . ' Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/settings"'
+                . ' Target="settings.xml"/>'
+                . '<Relationship Id="rId3"'
+                . ' Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/fontTable"'
+                . ' Target="fontTable.xml"/>'
+                . '</Relationships>'
+            );
+            $targetRelsDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"/>'
+            );
+            // Content references all three IDs
+            $contentXml = '<w:r xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"'
+                . ' xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+                . '<w:t>rId1 rId2 rId3</w:t></w:r>';
+            $idTracker = new IdTracker();
+
+            // Act
+            $map = $manager->buildMap($sourceRelsDom, $targetRelsDom, $contentXml, $idTracker);
+
+            // Assert -- structural rels should not be mapped
+            expect($map->getNewId('rId1'))->toBeNull();
+            expect($map->getNewId('rId2'))->toBeNull();
+            expect($map->getNewId('rId3'))->toBeNull();
+        });
+
+        it('excludes header and footer relationships', function (): void {
+            // Arrange
+            $manager = new RelationshipManager();
+            $sourceRelsDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+                . '<Relationship Id="rId1"'
+                . ' Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/header"'
+                . ' Target="header1.xml"/>'
+                . '<Relationship Id="rId2"'
+                . ' Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer"'
+                . ' Target="footer1.xml"/>'
+                . '</Relationships>'
+            );
+            $targetRelsDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"/>'
+            );
+            $contentXml = '<w:r xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+                . '<w:t>rId1 rId2</w:t></w:r>';
+            $idTracker = new IdTracker();
+
+            // Act
+            $map = $manager->buildMap($sourceRelsDom, $targetRelsDom, $contentXml, $idTracker);
+
+            // Assert -- header/footer rels handled by HeaderFooterCopier
+            expect($map->getNewId('rId1'))->toBeNull();
+            expect($map->getNewId('rId2'))->toBeNull();
+        });
+
+        it('reuses existing target rId when Type+Target matches a duplicate', function (): void {
+            // Arrange
+            $manager = new RelationshipManager();
+            $sourceRelsDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+                . '<Relationship Id="rId1"'
+                . ' Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image"'
+                . ' Target="media/image1.png"/>'
+                . '</Relationships>'
+            );
+            // Target already has the same image relationship
+            $targetRelsDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+                . '<Relationship Id="rId10"'
+                . ' Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image"'
+                . ' Target="media/image1.png"/>'
+                . '</Relationships>'
+            );
+            $contentXml = '<a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"'
+                . ' r:embed="rId1"/>';
+            $idTracker = new IdTracker();
+
+            // Act
+            $map = $manager->buildMap($sourceRelsDom, $targetRelsDom, $contentXml, $idTracker);
+
+            // Assert -- should reuse rId10 from target, not create a new ID
+            expect($map->getNewId('rId1'))->toBe('rId10');
+            // Should not need file copy since duplicate exists in target
+            $filesToCopy = $map->getFilesToCopy();
+            expect($filesToCopy)->toBe([]);
+        });
+
+        it('marks external relationships as not needing file copy', function (): void {
+            // Arrange
+            $manager = new RelationshipManager();
+            $sourceRelsDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+                . '<Relationship Id="rId1"'
+                . ' Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink"'
+                . ' Target="https://example.com" TargetMode="External"/>'
+                . '</Relationships>'
+            );
+            $targetRelsDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"/>'
+            );
+            $contentXml = '<w:hyperlink xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"'
+                . ' r:id="rId1"><w:t>link</w:t></w:hyperlink>';
+            $idTracker = new IdTracker();
+
+            // Act
+            $map = $manager->buildMap($sourceRelsDom, $targetRelsDom, $contentXml, $idTracker);
+
+            // Assert
+            expect($map->getNewId('rId1'))->not->toBeNull();
+            // External rels don't need file copy
+            $filesToCopy = $map->getFilesToCopy();
+            expect($filesToCopy)->toBe([]);
+        });
+
+        it('excludes relationships not referenced in the content', function (): void {
+            // Arrange
+            $manager = new RelationshipManager();
+            $sourceRelsDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+                . '<Relationship Id="rId1"'
+                . ' Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image"'
+                . ' Target="media/image1.png"/>'
+                . '<Relationship Id="rId2"'
+                . ' Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image"'
+                . ' Target="media/image2.png"/>'
+                . '</Relationships>'
+            );
+            $targetRelsDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"/>'
+            );
+            // Content only references rId1, not rId2
+            $contentXml = '<w:drawing xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"'
+                . ' xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+                . '<a:blip r:embed="rId1"/></w:drawing>';
+            $idTracker = new IdTracker();
+
+            // Act
+            $map = $manager->buildMap($sourceRelsDom, $targetRelsDom, $contentXml, $idTracker);
+
+            // Assert
+            expect($map->getNewId('rId1'))->not->toBeNull();
+            expect($map->getNewId('rId2'))->toBeNull();
+        });
+    });
+
+    describe('addRelationships()', function (): void {
+        it('does not add a relationship when the new rId already exists in target', function (): void {
+            // Arrange
+            $manager = new RelationshipManager();
+
+            // Source com image rId1 que tem mesmo Type+Target que target rId10
+            $sourceRelsDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+                . '<Relationship Id="rId1"'
+                . ' Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image"'
+                . ' Target="media/image1.png"/>'
+                . '</Relationships>'
+            );
+            $targetRelsDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+                . '<Relationship Id="rId10"'
+                . ' Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image"'
+                . ' Target="media/image1.png"/>'
+                . '</Relationships>'
+            );
+            // Content references rId1
+            $contentXml = '<a:blip xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"'
+                . ' xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"'
+                . ' r:embed="rId1"/>';
+            $idTracker = new IdTracker();
+
+            // Build map -- rId1 should be mapped to rId10 (reuse by Type+Target match)
+            $map = $manager->buildMap($sourceRelsDom, $targetRelsDom, $contentXml, $idTracker);
+
+            // Act
+            $manager->addRelationships($targetRelsDom, $map);
+
+            // Assert -- target still has exactly 1 Relationship (no duplicate)
+            $xpath = createXpathWithNamespaces($targetRelsDom);
+            $rels = $xpath->query('//rel:Relationship');
+            assert($rels !== false);
+            expect($rels->length)->toBe(1);
+        });
+
+        it('does nothing when the target rels DOM has no document element', function (): void {
+            // Arrange
+            $manager = new RelationshipManager();
+            $emptyRelsDom = new DOMDocument();
+
+            $relMap = new RelationshipMap([
+                'rId1' => new RelationshipMapping(
+                    oldId: 'rId1',
+                    newId: 'rId50',
+                    type: 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/image',
+                    target: 'media/image1.png',
+                    newTarget: 'media/image1.png',
+                    needsFileCopy: true,
+                    isExternal: false,
+                ),
+            ]);
+
+            // Act -- should not throw
+            $manager->addRelationships($emptyRelsDom, $relMap);
+
+            // Assert -- DOM still has no documentElement (nothing happened)
+            expect($emptyRelsDom->documentElement)->toBeNull();
+        });
+
+        it('adds new relationship elements to the target rels DOM', function (): void {
+            // Arrange
+            $manager = new RelationshipManager();
+            $sourceRelsDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+                . '<Relationship Id="rId1"'
+                . ' Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image"'
+                . ' Target="media/image1.png"/>'
+                . '</Relationships>'
+            );
+            $targetRelsDom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"/>'
+            );
+            $contentXml = '<a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"'
+                . ' r:embed="rId1"/>';
+            $idTracker = new IdTracker();
+            $map = $manager->buildMap($sourceRelsDom, $targetRelsDom, $contentXml, $idTracker);
+
+            // Act
+            $manager->addRelationships($targetRelsDom, $map);
+
+            // Assert -- target should now contain a Relationship element
+            $xpath = createXpathWithNamespaces($targetRelsDom);
+            $rels = $xpath->query('//rel:Relationship');
+            expect($rels->length)->toBeGreaterThan(0);
+        });
+    });
+});

@@ -57,7 +57,7 @@ parameters:
 		-
 			message: '#^Cannot access property \$paragraph on DocxMerge\\Dto\\MarkerLocation\|null\.$#'
 			identifier: property.nonObject
-			count: 3
+			count: 8
 			path: tests/Unit/Marker/MarkerLocatorTest.php
 
 		-

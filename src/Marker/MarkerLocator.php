@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DocxMerge\Marker;
 
 use DocxMerge\Dto\MarkerLocation;
+use DocxMerge\Exception\MergeException;
 use DocxMerge\Xml\XmlHelper;
 use DOMDocument;
 use DOMElement;
@@ -24,14 +25,17 @@ final class MarkerLocator implements MarkerLocatorInterface
      * Finds the paragraph element containing the given marker.
      *
      * Iterates all w:p elements in the document, concatenates the text content
-     * of their descendant w:t elements, and checks for the marker string.
+     * of their descendant w:t elements, and matches the marker pattern via regex.
      * Supports markers fragmented across multiple runs by Word's serializer.
      *
      * @param DOMDocument $documentDom The template document DOM.
      * @param string $markerName The marker name without delimiters (e.g., 'CONTENT').
-     * @param string $markerPattern Regex pattern for markers (unused for specific lookup).
+     * @param string $markerPattern PCRE regex pattern with at least one capture group
+     *                              for the marker name (e.g., '/\$\{([A-Z_][A-Z0-9_]*)\}/').
      *
      * @return MarkerLocation|null The located marker, or null if not found.
+     *
+     * @throws MergeException If the marker pattern is not a valid PCRE regex.
      */
     public function locate(
         DOMDocument $documentDom,
@@ -49,8 +53,13 @@ final class MarkerLocator implements MarkerLocatorInterface
         }
         // @codeCoverageIgnoreEnd
 
-        // The full marker string to search for within concatenated paragraph text.
-        $markerString = '${' . $markerName . '}';
+        // Validate syntax eagerly to provide a clear error before iterating paragraphs.
+        if (preg_match($markerPattern, '') === false) {
+            $errorCode = preg_last_error();
+            throw new MergeException(
+                "Invalid marker pattern '{$markerPattern}': PCRE error code {$errorCode}."
+            );
+        }
 
         foreach ($paragraphs as $paragraph) {
             // @codeCoverageIgnoreStart
@@ -84,11 +93,17 @@ final class MarkerLocator implements MarkerLocatorInterface
                 $textElements[] = $textNode;
             }
 
-            if (str_contains($fullText, $markerString)) {
-                return new MarkerLocation(
-                    paragraph: $paragraph,
-                    textNodes: $textElements,
-                );
+            // Match the marker pattern against concatenated text to support any delimiter style.
+            $matchCount = preg_match_all($markerPattern, $fullText, $matches);
+            if ($matchCount > 0 && isset($matches[1])) {
+                foreach ($matches[1] as $capturedName) {
+                    if ($capturedName === $markerName) {
+                        return new MarkerLocation(
+                            paragraph: $paragraph,
+                            textNodes: $textElements,
+                        );
+                    }
+                }
             }
         }
 

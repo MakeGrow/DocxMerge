@@ -22,6 +22,7 @@ declare(strict_types=1);
  *   source-multi-section.docx  -- Three sections with intermediate sectPr
  *   template-fragmented.docx   -- ${CONTENT} split across 3 w:t elements
  *   source-empty.docx          -- Only sectPr, no content paragraphs
+ *   source-with-photo.docx     -- Paragraph with image using non-standard filename (photo.png)
  */
 
 $fixtureDir = __DIR__;
@@ -457,5 +458,47 @@ createDocx($fixtureDir . '/source-empty.docx', [
 ]);
 
 echo "Created: source-empty.docx\n";
+
+// -- 12. source-with-photo.docx -----------------------------------------------
+// Paragraph with an inline drawing referencing rId2 -> media/photo.png.
+// Uses a non-standard filename to test media target remapping.
+
+$photoDrawing = '<w:p><w:r><w:drawing>'
+    . '<wp:inline distT="0" distB="0" distL="0" distR="0">'
+    . '<wp:extent cx="914400" cy="914400"/>'
+    . '<wp:effectExtent l="0" t="0" r="0" b="0"/>'
+    . '<wp:docPr id="1" name="Photo 1"/>'
+    . '<wp:cNvGraphicFramePr>'
+    . '<a:graphicFrameLocks noChangeAspect="1"/>'
+    . '</wp:cNvGraphicFramePr>'
+    . '<a:graphic>'
+    . '<a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">'
+    . '<pic:pic>'
+    . '<pic:nvPicPr><pic:cNvPr id="0" name="photo.png"/><pic:cNvPicPr/></pic:nvPicPr>'
+    . '<pic:blipFill><a:blip r:embed="rId2"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>'
+    . '<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="914400" cy="914400"/></a:xfrm>'
+    . '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr>'
+    . '</pic:pic>'
+    . '</a:graphicData>'
+    . '</a:graphic>'
+    . '</wp:inline>'
+    . '</w:drawing></w:r></w:p>';
+
+$photoBody = $photoDrawing . finalSectPr();
+
+createDocx($fixtureDir . '/source-with-photo.docx', [
+    '[Content_Types].xml' => buildContentTypes(
+        defaults: [['extension' => 'png', 'contentType' => 'image/png']],
+    ),
+    '_rels/.rels' => buildRootRels(),
+    'word/document.xml' => buildDocumentXml($photoBody),
+    'word/_rels/document.xml.rels' => buildDocumentRels([
+        ['id' => 'rId2', 'type' => $imageType, 'target' => 'media/photo.png'],
+    ]),
+    'word/styles.xml' => buildStyles(),
+    'word/media/photo.png' => $pngData,
+]);
+
+echo "Created: source-with-photo.docx\n";
 
 echo "\nAll fixtures created successfully.\n";

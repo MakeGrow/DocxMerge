@@ -209,6 +209,84 @@ describe('DocxMerger', function (): void {
             ))->toThrow(InvalidTemplateException::class);
         });
 
+        it('registers numbering.xml content type and relationship when template has no numbering', function () use (&$output): void {
+            // Arrange
+            $output = tempnam(sys_get_temp_dir(), 'docx_test_') . '.docx';
+            $merger = new DocxMerger();
+
+            // Act -- template-simple.docx does NOT have numbering.xml
+            $result = $merger->merge(
+                templatePath: fixture('template-simple.docx'),
+                merges: ['CONTENT' => fixture('source-with-lists.docx')],
+                outputPath: $output,
+            );
+
+            // Assert
+            expect($result->success)->toBeTrue();
+
+            $zip = new ZipArchive();
+            $zip->open($output);
+
+            // numbering.xml must exist
+            $numbering = $zip->getFromName('word/numbering.xml');
+            expect($numbering)->not->toBeFalse();
+
+            // [Content_Types].xml must have Override for numbering.xml
+            $contentTypes = $zip->getFromName('[Content_Types].xml');
+            assert(is_string($contentTypes));
+            expect($contentTypes)->toContain('PartName="/word/numbering.xml"');
+            expect($contentTypes)->toContain('numbering+xml');
+
+            // document.xml.rels must have Relationship for numbering
+            $rels = $zip->getFromName('word/_rels/document.xml.rels');
+            assert(is_string($rels));
+            expect($rels)->toContain('relationships/numbering');
+            expect($rels)->toContain('numbering.xml');
+
+            $zip->close();
+        });
+
+        it('correctly maps media files with non-standard names', function () use (&$output): void {
+            // Arrange
+            $output = tempnam(sys_get_temp_dir(), 'docx_test_') . '.docx';
+            $merger = new DocxMerger();
+
+            // Act
+            $result = $merger->merge(
+                templatePath: fixture('template-simple.docx'),
+                merges: ['CONTENT' => fixture('source-with-photo.docx')],
+                outputPath: $output,
+            );
+
+            // Assert
+            expect($result->success)->toBeTrue();
+
+            $zip = new ZipArchive();
+            $zip->open($output);
+
+            // An image file must exist in word/media/ with a sequential name
+            $hasImage = false;
+            $imageName = '';
+            for ($i = 0; $i < $zip->numFiles; $i++) {
+                /** @var string $name */
+                $name = $zip->getNameIndex($i);
+                if (preg_match('#^word/media/image\d+\.png$#', $name)) {
+                    $hasImage = true;
+                    $imageName = str_replace('word/', '', $name);
+                    break;
+                }
+            }
+            expect($hasImage)->toBeTrue();
+
+            // The relationship must point to the renamed file, not "media/photo.png"
+            $rels = $zip->getFromName('word/_rels/document.xml.rels');
+            assert(is_string($rels));
+            expect($rels)->not->toContain('photo.png');
+            expect($rels)->toContain($imageName);
+
+            $zip->close();
+        });
+
         it('handles source with multiple sections via MergeDefinition', function () use (&$output): void {
             // Arrange
             $output = tempnam(sys_get_temp_dir(), 'docx_test_') . '.docx';

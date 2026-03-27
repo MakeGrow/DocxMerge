@@ -7,7 +7,8 @@ declare(strict_types=1);
  *
  * Verifies that media files are copied from source to target ZIP with
  * sequential filenames, and that only files referenced in the
- * RelationshipMap are copied.
+ * RelationshipMap are copied. copy() must return a map of original
+ * target paths to new target paths (array<string, string>).
  */
 
 use DocxMerge\Dto\RelationshipMap;
@@ -76,10 +77,13 @@ describe('MediaCopier', function (): void {
             $copier = new MediaCopier();
 
             // Act
-            $count = $copier->copy($sourceZip, $targetZip, $relationshipMap, $idTracker);
+            $targetMap = $copier->copy($sourceZip, $targetZip, $relationshipMap, $idTracker);
 
-            // Assert
-            expect($count)->toBe(1);
+            // Assert -- returns map instead of int
+            expect($targetMap)->toBeArray();
+            expect($targetMap)->toHaveCount(1);
+            expect($targetMap)->toHaveKey('media/image1.png');
+            expect($targetMap['media/image1.png'])->toMatch('/^media\/image\d+\.png$/');
 
             $sourceZip->close();
             $targetZip->close();
@@ -140,16 +144,17 @@ describe('MediaCopier', function (): void {
             $copier = new MediaCopier();
 
             // Act
-            $count = $copier->copy($sourceZip, $targetZip, $relationshipMap, $idTracker);
+            $targetMap = $copier->copy($sourceZip, $targetZip, $relationshipMap, $idTracker);
 
             // Assert
-            expect($count)->toBe(0);
+            expect($targetMap)->toBeArray();
+            expect($targetMap)->toBeEmpty();
 
             $sourceZip->close();
             $targetZip->close();
         });
 
-        it('returns zero when the relationship map is empty', function () use (&$tempFiles): void {
+        it('returns empty array when the relationship map is empty', function () use (&$tempFiles): void {
             // Arrange
             $sourcePath = tempnam(sys_get_temp_dir(), 'src_zip_') . '.zip';
             $targetPath = tempnam(sys_get_temp_dir(), 'tgt_zip_') . '.zip';
@@ -177,10 +182,60 @@ describe('MediaCopier', function (): void {
             $copier = new MediaCopier();
 
             // Act
-            $count = $copier->copy($sourceZip, $targetZip, $relationshipMap, $idTracker);
+            $targetMap = $copier->copy($sourceZip, $targetZip, $relationshipMap, $idTracker);
 
             // Assert
-            expect($count)->toBe(0);
+            expect($targetMap)->toBeArray();
+            expect($targetMap)->toBeEmpty();
+
+            $sourceZip->close();
+            $targetZip->close();
+        });
+
+        it('maps non-standard image names to sequential target names', function () use (&$tempFiles): void {
+            // Arrange
+            $sourcePath = tempnam(sys_get_temp_dir(), 'src_zip_') . '.zip';
+            $targetPath = tempnam(sys_get_temp_dir(), 'tgt_zip_') . '.zip';
+            /** @var list<string> $tempFiles */
+            $tempFiles[] = $sourcePath;
+            $tempFiles[] = $targetPath;
+
+            $sourceZip = new ZipArchive();
+            $sourceZip->open($sourcePath, ZipArchive::CREATE);
+            $sourceZip->addFromString('word/media/photo.png', 'fake-png-data');
+            $sourceZip->close();
+
+            $targetZip = new ZipArchive();
+            $targetZip->open($targetPath, ZipArchive::CREATE);
+            $targetZip->addFromString('word/document.xml', '<w:document/>');
+            $targetZip->close();
+
+            $sourceZip = new ZipArchive();
+            $sourceZip->open($sourcePath);
+            $targetZip = new ZipArchive();
+            $targetZip->open($targetPath);
+
+            $relationshipMap = new RelationshipMap([
+                'rId2' => new RelationshipMapping(
+                    oldId: 'rId2',
+                    newId: 'rId10',
+                    type: 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/image',
+                    target: 'media/photo.png',
+                    newTarget: 'media/photo.png',
+                    needsFileCopy: true,
+                    isExternal: false,
+                ),
+            ]);
+
+            $idTracker = new IdTracker();
+            $copier = new MediaCopier();
+
+            // Act
+            $targetMap = $copier->copy($sourceZip, $targetZip, $relationshipMap, $idTracker);
+
+            // Assert
+            expect($targetMap)->toHaveKey('media/photo.png');
+            expect($targetMap['media/photo.png'])->toBe('media/image1.png');
 
             $sourceZip->close();
             $targetZip->close();

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DocxMerge\ContentTypes;
 
+use DocxMerge\Tracking\IdTracker;
 use DocxMerge\Xml\XmlHelper;
 use DOMDocument;
 use DOMXPath;
@@ -61,6 +62,99 @@ final class ContentTypesManager implements ContentTypesManagerInterface
 
         $this->addDefaultEntriesForMediaFiles($contentTypesDom, $xpath, $targetZip);
         $this->addOverrideEntriesForHeadersAndFooters($contentTypesDom, $xpath, $targetZip);
+    }
+
+    /**
+     * Registers a required OOXML part in [Content_Types].xml and document.xml.rels.
+     *
+     * Adds an Override entry for the part in the content types DOM and a
+     * Relationship entry in the relationships DOM. Both operations are
+     * idempotent: existing entries are not duplicated.
+     *
+     * @param DOMDocument $contentTypesDom The [Content_Types].xml DOM (modified in place).
+     * @param DOMDocument $relsDom         The document.xml.rels DOM (modified in place).
+     * @param string      $partName        The part name (e.g., "/word/numbering.xml").
+     * @param string      $contentType     The MIME content type for the Override entry.
+     * @param string      $relationshipType The relationship type URI.
+     * @param string      $target          The relationship target (e.g., "numbering.xml").
+     * @param IdTracker   $idTracker       The ID tracker for generating unique rId values.
+     */
+    public function registerRequiredPart(
+        DOMDocument $contentTypesDom,
+        DOMDocument $relsDom,
+        string $partName,
+        string $contentType,
+        string $relationshipType,
+        string $target,
+        IdTracker $idTracker,
+    ): void {
+        $this->addOverrideIfMissing($contentTypesDom, $partName, $contentType);
+        $this->addRelationshipIfMissing($relsDom, $relationshipType, $target, $idTracker);
+    }
+
+    /**
+     * Adds an Override entry to [Content_Types].xml if one does not already exist.
+     *
+     * @param DOMDocument $dom         The [Content_Types].xml DOM.
+     * @param string      $partName    The part name for the Override entry.
+     * @param string      $contentType The MIME content type.
+     */
+    private function addOverrideIfMissing(
+        DOMDocument $dom,
+        string $partName,
+        string $contentType,
+    ): void {
+        $root = $dom->documentElement;
+        if ($root === null) {
+            return;
+        }
+
+        $xpath = new DOMXPath($dom);
+        $xpath->registerNamespace('ct', XmlHelper::NS_CT);
+
+        $existing = $xpath->query('//ct:Override[@PartName="' . $partName . '"]');
+        if ($existing !== false && $existing->length > 0) {
+            return;
+        }
+
+        $element = $dom->createElementNS(XmlHelper::NS_CT, 'Override');
+        $element->setAttribute('PartName', $partName);
+        $element->setAttribute('ContentType', $contentType);
+        $root->appendChild($element);
+    }
+
+    /**
+     * Adds a Relationship entry to the rels DOM if one with the same Type does not exist.
+     *
+     * @param DOMDocument $dom              The relationships DOM.
+     * @param string      $relationshipType The relationship type URI.
+     * @param string      $target           The relationship target.
+     * @param IdTracker   $idTracker        The ID tracker for generating unique rId values.
+     */
+    private function addRelationshipIfMissing(
+        DOMDocument $dom,
+        string $relationshipType,
+        string $target,
+        IdTracker $idTracker,
+    ): void {
+        $root = $dom->documentElement;
+        if ($root === null) {
+            return;
+        }
+
+        $xpath = new DOMXPath($dom);
+        $xpath->registerNamespace('rel', XmlHelper::NS_REL);
+
+        $existing = $xpath->query('//rel:Relationship[@Type="' . $relationshipType . '"]');
+        if ($existing !== false && $existing->length > 0) {
+            return;
+        }
+
+        $element = $dom->createElementNS(XmlHelper::NS_REL, 'Relationship');
+        $element->setAttribute('Id', $idTracker->nextRelationshipId());
+        $element->setAttribute('Type', $relationshipType);
+        $element->setAttribute('Target', $target);
+        $root->appendChild($element);
     }
 
     /**

@@ -18,4 +18,3 @@ samples/output/*.docx
 /.claude
 CLAUDE.md
 /.github/agents
-/.devcontainer

@@ -60,4 +60,36 @@ final class RelationshipMap
             static fn (RelationshipMapping $mapping): bool => $mapping->needsFileCopy,
         );
     }
+
+    /**
+     * Creates a new RelationshipMap with updated newTarget values.
+     *
+     * Used after MediaCopier renames files to update relationship targets
+     * before they are written to the target rels DOM.
+     *
+     * @param array<string, string> $targetMap Map of old target path to new target path.
+     *
+     * @return self New map with updated newTarget values where applicable.
+     */
+    public function withUpdatedTargets(array $targetMap): self
+    {
+        $updated = [];
+        foreach ($this->mappings as $key => $mapping) {
+            if (isset($targetMap[$mapping->target])) {
+                $updated[$key] = new RelationshipMapping(
+                    oldId: $mapping->oldId,
+                    newId: $mapping->newId,
+                    type: $mapping->type,
+                    target: $mapping->target,
+                    newTarget: $targetMap[$mapping->target],
+                    needsFileCopy: $mapping->needsFileCopy,
+                    isExternal: $mapping->isExternal,
+                );
+            } else {
+                $updated[$key] = $mapping;
+            }
+        }
+
+        return new self($updated);
+    }
 }

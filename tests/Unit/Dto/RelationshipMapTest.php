@@ -79,6 +79,73 @@ describe('RelationshipMap', function (): void {
         });
     });
 
+    describe('withUpdatedTargets()', function (): void {
+        it('updates newTarget for mappings matching the target map', function (): void {
+            // Arrange
+            $mapping = new RelationshipMapping(
+                oldId: 'rId1',
+                newId: 'rId10',
+                type: 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/image',
+                target: 'media/photo.png',
+                newTarget: 'media/photo.png',
+                needsFileCopy: true,
+                isExternal: false,
+            );
+            $map = new RelationshipMap(mappings: ['rId1' => $mapping]);
+
+            // Act
+            $updated = $map->withUpdatedTargets(['media/photo.png' => 'media/image1.png']);
+
+            // Assert
+            expect($updated)->toBeInstanceOf(RelationshipMap::class);
+            expect($updated->mappings['rId1']->newTarget)->toBe('media/image1.png');
+            // Original target should be preserved
+            expect($updated->mappings['rId1']->target)->toBe('media/photo.png');
+        });
+
+        it('preserves mappings without matching targets', function (): void {
+            // Arrange
+            $mapping = new RelationshipMapping(
+                oldId: 'rId1',
+                newId: 'rId10',
+                type: 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink',
+                target: 'https://example.com',
+                newTarget: 'https://example.com',
+                needsFileCopy: false,
+                isExternal: true,
+            );
+            $map = new RelationshipMap(mappings: ['rId1' => $mapping]);
+
+            // Act
+            $updated = $map->withUpdatedTargets(['media/photo.png' => 'media/image1.png']);
+
+            // Assert
+            expect($updated->mappings['rId1']->newTarget)->toBe('https://example.com');
+        });
+
+        it('returns a new instance without modifying the original', function (): void {
+            // Arrange
+            $mapping = new RelationshipMapping(
+                oldId: 'rId1',
+                newId: 'rId10',
+                type: 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/image',
+                target: 'media/photo.png',
+                newTarget: 'media/photo.png',
+                needsFileCopy: true,
+                isExternal: false,
+            );
+            $map = new RelationshipMap(mappings: ['rId1' => $mapping]);
+
+            // Act
+            $updated = $map->withUpdatedTargets(['media/photo.png' => 'media/image1.png']);
+
+            // Assert -- original unchanged
+            expect($map->mappings['rId1']->newTarget)->toBe('media/photo.png');
+            // Updated has the new value
+            expect($updated->mappings['rId1']->newTarget)->toBe('media/image1.png');
+        });
+    });
+
     describe('getFilesToCopy()', function (): void {
         it('returns only mappings that require file copy', function (): void {
             // Arrange

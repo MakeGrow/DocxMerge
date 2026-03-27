@@ -178,7 +178,8 @@ final class MergeOrchestrator
 
             // numbering.xml is optional; create an empty one if absent
             $numberingDom = $this->loadOptionalPart($targetZip, 'word/numbering.xml');
-            if ($numberingDom === null) {
+            $needsNumberingRegistration = ($numberingDom === null);
+            if ($needsNumberingRegistration) {
                 $numberingDom = $this->createEmptyNumberingDom();
             }
 
@@ -202,6 +203,19 @@ final class MergeOrchestrator
                 idTracker: $idTracker,
                 sourceCache: $sourceCache,
             );
+
+            // --- Phase 5.5: Register numbering part if dynamically created ---
+            if ($needsNumberingRegistration) {
+                $this->contentTypesManager->registerRequiredPart(
+                    $contentTypesDom,
+                    $relsDom,
+                    '/word/numbering.xml',
+                    'application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml',
+                    'http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering',
+                    'numbering.xml',
+                    $idTracker,
+                );
+            }
 
             // --- Phase 6: Process each MergeDefinition ---
             foreach ($definitions as $definition) {
@@ -443,13 +457,16 @@ final class MergeOrchestrator
         );
 
         // --- Step 7e: Copy resources ---
-        $imagesCopied = $this->mediaCopier->copy(
+        $mediaTargetMap = $this->mediaCopier->copy(
             $sourceDoc->zip,
             $context->targetZip,
             $relationshipMap,
             $context->idTracker,
         );
-        $context->incrementStat('images_copied', $imagesCopied);
+        $context->incrementStat('images_copied', count($mediaTargetMap));
+
+        // Update relationship targets after media renaming
+        $relationshipMap = $relationshipMap->withUpdatedTargets($mediaTargetMap);
 
         $headerFooterMap = $this->headerFooterCopier->copy(
             $sourceDoc->zip,

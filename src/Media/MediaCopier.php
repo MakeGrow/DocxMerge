@@ -28,15 +28,17 @@ final class MediaCopier implements MediaCopierInterface
      * @param RelationshipMap $relationshipMap Map containing file targets to copy.
      * @param IdTracker $idTracker Shared ID counters.
      *
-     * @return int Number of files copied.
+     * @return array<string, string> Map of original target paths to new target paths
+     *                               (e.g. "media/photo.png" => "media/image1.png").
      */
     public function copy(
         ZipArchive $sourceZip,
         ZipArchive $targetZip,
         RelationshipMap $relationshipMap,
         IdTracker $idTracker,
-    ): int {
-        $copied = 0;
+    ): array {
+        /** @var array<string, string> $targetMap */
+        $targetMap = [];
         $filesToCopy = $relationshipMap->getFilesToCopy();
 
         foreach ($filesToCopy as $mapping) {
@@ -55,9 +57,9 @@ final class MediaCopier implements MediaCopierInterface
             $targetPath = 'word/media/' . $newFilename;
 
             $targetZip->addFromString($targetPath, $content);
-            $copied++;
+            $targetMap[$mapping->target] = 'media/' . $newFilename;
         }
 
-        return $copied;
+        return $targetMap;
     }
 }

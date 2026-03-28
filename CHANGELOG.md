@@ -16,10 +16,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Minimum PHP version bumped from 8.1 to 8.2.
 - Test suite expanded from 169 tests / 306 assertions to 182 tests / 357 assertions.
 
 ## [0.0.0-beta] - 2026-03-27
+
+### Changed
+
+- Minimum PHP version set to 8.2.
 
 ### Added
 

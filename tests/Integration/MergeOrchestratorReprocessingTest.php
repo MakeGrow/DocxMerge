@@ -41,7 +41,7 @@ describe('MergeOrchestrator reprocessing', function (): void {
 
         // Verify pass 1 output: FIRST replaced, SECOND still present
         $zip1 = new ZipArchive();
-        $zip1->open($output);
+        expect($zip1->open($output))->toBe(true);
         $doc1 = $zip1->getFromName('word/document.xml');
         assert(is_string($doc1));
         expect($doc1)->not->toContain('${FIRST}');
@@ -61,16 +61,21 @@ describe('MergeOrchestrator reprocessing', function (): void {
         expect($pass2->success)->toBeTrue();
 
         $zip2 = new ZipArchive();
-        $zip2->open($output);
-        $doc2 = $zip2->getFromName('word/document.xml');
-        assert(is_string($doc2));
+        expect($zip2->open($output))->toBe(true);
 
-        // Both markers should be replaced
-        expect($doc2)->not->toContain('${FIRST}');
-        expect($doc2)->not->toContain('${SECOND}');
-        // Content from both sources should be present
-        expect($doc2)->toContain('Content from source A');
-        expect($doc2)->toContain('Content from source B');
+        try {
+            $doc2 = $zip2->getFromName('word/document.xml');
+            assert(is_string($doc2));
+
+            // Both markers should be replaced
+            expect($doc2)->not->toContain('${FIRST}');
+            expect($doc2)->not->toContain('${SECOND}');
+            // Content from both sources should be present
+            expect($doc2)->toContain('Content from source A');
+            expect($doc2)->toContain('Content from source B');
+        } finally {
+            $zip2->close();
+        }
     });
 
     it('falls back to template when reprocessing is enabled but output does not exist', function () use (&$output): void {
@@ -98,7 +103,7 @@ describe('MergeOrchestrator reprocessing', function (): void {
         expect(file_exists($output))->toBeTrue();
 
         $zip = new ZipArchive();
-        $zip->open($output);
+        expect($zip->open($output))->toBe(true);
         $docXml = $zip->getFromName('word/document.xml');
         assert(is_string($docXml));
         expect($docXml)->not->toContain('${FIRST}');
@@ -133,7 +138,7 @@ describe('MergeOrchestrator reprocessing', function (): void {
         expect($pass2->success)->toBeTrue();
 
         $zip = new ZipArchive();
-        $zip->open($output);
+        expect($zip->open($output))->toBe(true);
         $docXml = $zip->getFromName('word/document.xml');
         assert(is_string($docXml));
 
@@ -172,7 +177,7 @@ describe('MergeOrchestrator reprocessing', function (): void {
         expect($result->success)->toBeTrue();
 
         $zip = new ZipArchive();
-        $zip->open($output);
+        expect($zip->open($output))->toBe(true);
         $docXml = $zip->getFromName('word/document.xml');
         assert(is_string($docXml));
 
@@ -212,7 +217,7 @@ describe('MergeOrchestrator reprocessing', function (): void {
         expect(file_exists($output))->toBeTrue();
 
         $zip = new ZipArchive();
-        $zip->open($output);
+        expect($zip->open($output))->toBe(true);
         $docXml = $zip->getFromName('word/document.xml');
         assert(is_string($docXml));
 

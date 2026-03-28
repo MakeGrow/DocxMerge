@@ -55,7 +55,13 @@ final class MarkerLocator implements MarkerLocatorInterface
         // @codeCoverageIgnoreEnd
 
         // Validate syntax eagerly to provide a clear error before iterating paragraphs.
-        if (preg_match($markerPattern, '') === false) {
+        // Suppress the E_WARNING that preg_match emits for invalid patterns so consumers
+        // only see the MergeException, not a raw PHP warning.
+        set_error_handler(static fn (): bool => true);
+        $validationResult = preg_match($markerPattern, '');
+        restore_error_handler();
+
+        if ($validationResult === false) {
             $errorCode = preg_last_error();
             throw new MergeException(
                 "Invalid marker pattern '{$markerPattern}': PCRE error code {$errorCode}."
@@ -96,6 +102,14 @@ final class MarkerLocator implements MarkerLocatorInterface
 
             // Match the marker pattern against concatenated text to support any delimiter style.
             $matchCount = preg_match_all($markerPattern, $fullText, $matches);
+
+            if ($matchCount === false) {
+                $errorCode = preg_last_error();
+                throw new MergeException(
+                    "Marker pattern '{$markerPattern}' failed during matching: PCRE error code {$errorCode}."
+                );
+            }
+
             if ($matchCount > 0) {
                 if (!isset($matches[1]) || $matches[1] === []) {
                     throw new MergeException(

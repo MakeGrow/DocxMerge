@@ -31,6 +31,7 @@ describe('MarkerLocator', function (): void {
 
             // Assert
             expect($result)->toBeInstanceOf(MarkerLocation::class);
+            assert($result instanceof MarkerLocation);
             expect($result->paragraph->nodeName)->toBe('w:p');
         });
 
@@ -55,6 +56,7 @@ describe('MarkerLocator', function (): void {
 
             // Assert
             expect($result)->toBeInstanceOf(MarkerLocation::class);
+            assert($result instanceof MarkerLocation);
             expect($result->paragraph->nodeName)->toBe('w:p');
         });
 
@@ -153,6 +155,7 @@ describe('MarkerLocator', function (): void {
 
             // Assert
             expect($result)->toBeInstanceOf(MarkerLocation::class);
+            assert($result instanceof MarkerLocation);
             // The paragraph should contain the SECOND marker text
             expect($result->paragraph->textContent)->toContain('SECOND');
         });
@@ -174,6 +177,7 @@ describe('MarkerLocator', function (): void {
 
             // Assert
             expect($result)->toBeInstanceOf(MarkerLocation::class);
+            assert($result instanceof MarkerLocation);
             expect($result->paragraph->nodeName)->toBe('w:p');
         });
 
@@ -194,6 +198,7 @@ describe('MarkerLocator', function (): void {
 
             // Assert
             expect($result)->toBeInstanceOf(MarkerLocation::class);
+            assert($result instanceof MarkerLocation);
             expect($result->paragraph->nodeName)->toBe('w:p');
         });
 
@@ -214,6 +219,7 @@ describe('MarkerLocator', function (): void {
 
             // Assert
             expect($result)->toBeInstanceOf(MarkerLocation::class);
+            assert($result instanceof MarkerLocation);
             expect($result->paragraph->nodeName)->toBe('w:p');
         });
 
@@ -257,6 +263,7 @@ describe('MarkerLocator', function (): void {
 
             // Assert
             expect($result)->toBeInstanceOf(MarkerLocation::class);
+            assert($result instanceof MarkerLocation);
             expect($result->paragraph->nodeName)->toBe('w:p');
         });
 
@@ -277,6 +284,26 @@ describe('MarkerLocator', function (): void {
                 ->toThrow(\DocxMerge\Exception\MergeException::class);
         });
 
+        it('throws when marker pattern has no capture group', function (): void {
+            // Arrange
+            $locator = new MarkerLocator();
+            $dom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+                . '<w:body>'
+                . '<w:p><w:r><w:t>{{CONTENT}}</w:t></w:r></w:p>'
+                . '<w:sectPr/>'
+                . '</w:body></w:document>'
+            );
+
+            // Act + Assert — pattern matches but has no capture group (index 1)
+            expect(fn () => $locator->locate($dom, 'CONTENT', '/\{\{[A-Z_]+\}\}/'))
+                ->toThrow(
+                    \DocxMerge\Exception\MergeException::class,
+                    'must define a capturing group',
+                );
+        });
+
         it('finds the correct marker among multiple matches with custom pattern', function (): void {
             // Arrange
             $locator = new MarkerLocator();
@@ -295,6 +322,7 @@ describe('MarkerLocator', function (): void {
 
             // Assert
             expect($result)->toBeInstanceOf(MarkerLocation::class);
+            assert($result instanceof MarkerLocation);
             expect($result->paragraph->textContent)->toContain('SECOND');
         });
 

@@ -312,6 +312,7 @@ final class MergeOrchestrator
      * @return string Path to the temporary working copy.
      *
      * @throws InvalidTemplateException If the source file does not exist or cannot be copied.
+     * @throws MergeException When a temporary working file cannot be created.
      */
     private function createWorkingCopy(string $templatePath, string $outputPath, MergeOptions $options): string
     {

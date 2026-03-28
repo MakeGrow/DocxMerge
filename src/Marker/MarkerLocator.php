@@ -35,7 +35,8 @@ final class MarkerLocator implements MarkerLocatorInterface
      *
      * @return MarkerLocation|null The located marker, or null if not found.
      *
-     * @throws MergeException If the marker pattern is not a valid PCRE regex.
+     * @throws MergeException If the marker pattern is not a valid PCRE regex or lacks
+     *                        a capturing group (index 1) for the marker name.
      */
     public function locate(
         DOMDocument $documentDom,
@@ -95,7 +96,12 @@ final class MarkerLocator implements MarkerLocatorInterface
 
             // Match the marker pattern against concatenated text to support any delimiter style.
             $matchCount = preg_match_all($markerPattern, $fullText, $matches);
-            if ($matchCount > 0 && isset($matches[1])) {
+            if ($matchCount > 0) {
+                if (!isset($matches[1]) || $matches[1] === []) {
+                    throw new MergeException(
+                        "Marker pattern '{$markerPattern}' must define a capturing group (index 1) for the marker name."
+                    );
+                }
                 foreach ($matches[1] as $capturedName) {
                     if ($capturedName === $markerName) {
                         return new MarkerLocation(

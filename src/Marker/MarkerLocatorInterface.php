@@ -31,7 +31,8 @@ interface MarkerLocatorInterface
      *
      * @return MarkerLocation|null The located marker, or null if not found.
      *
-     * @throws MergeException If the marker pattern is not a valid PCRE regex.
+     * @throws MergeException If the marker pattern is not a valid PCRE regex or lacks
+     *                        a capturing group (index 1) for the marker name.
      */
     public function locate(
         DOMDocument $documentDom,

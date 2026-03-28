@@ -127,7 +127,7 @@ interface MarkerLocatorInterface
 
 This algorithm handles fragmented markers where Word splits `${CONTENT}` across multiple `w:r`/`w:t` elements (e.g., `$`, `{CONTENT`, `}`).
 
-> **Note**: `MarkerLocator::locate()` throws `MergeException` if the XPath query fails due to an invalid or corrupted DOM structure. Callers should be prepared to handle this exception.
+> **Note**: `MarkerLocator::locate()` returns `null` when the XPath query for `//w:p` fails (i.e., `DOMXPath::query()` returns `false`) or when the marker is not found, and throws `MergeException` only when the provided `$markerPattern` is not a valid PCRE pattern or lacks a required capture group. Callers should be prepared to handle both a `null` result and `MergeException` for invalid patterns.
 
 ### 1.5 ContentExtractor
 

@@ -25,7 +25,10 @@ describe('Custom marker pattern', function (): void {
 
     it('merges with custom marker pattern end-to-end', function () use (&$output): void {
         // Arrange
-        $output = tempnam(sys_get_temp_dir(), 'docx_custom_') . '.docx';
+        $tempFile = tempnam(sys_get_temp_dir(), 'docx_custom_');
+        assert(is_string($tempFile));
+        $output = $tempFile . '.docx';
+        unlink($tempFile);
         $merger = new DocxMerger();
 
         // Act

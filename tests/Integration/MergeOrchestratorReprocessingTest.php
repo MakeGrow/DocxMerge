@@ -26,7 +26,10 @@ describe('MergeOrchestrator reprocessing', function (): void {
 
     it('uses existing output as base when reprocessing is enabled', function () use (&$output): void {
         // Arrange -- Pass 1: merge FIRST into the template, producing an output file
-        $output = tempnam(sys_get_temp_dir(), 'docx_reprocess_') . '.docx';
+        $tempFile = tempnam(sys_get_temp_dir(), 'docx_reprocess_');
+        assert(is_string($tempFile));
+        $output = $tempFile . '.docx';
+        unlink($tempFile);
         $merger = new DocxMerger();
 
         $pass1 = $merger->merge(
@@ -72,7 +75,10 @@ describe('MergeOrchestrator reprocessing', function (): void {
 
     it('falls back to template when reprocessing is enabled but output does not exist', function () use (&$output): void {
         // Arrange
-        $output = tempnam(sys_get_temp_dir(), 'docx_reprocess_') . '.docx';
+        $tempFile = tempnam(sys_get_temp_dir(), 'docx_reprocess_');
+        assert(is_string($tempFile));
+        $output = $tempFile . '.docx';
+        unlink($tempFile);
         // Ensure output does not exist
         if (file_exists($output)) {
             unlink($output);
@@ -102,7 +108,10 @@ describe('MergeOrchestrator reprocessing', function (): void {
 
     it('uses template as base when reprocessing is disabled', function () use (&$output): void {
         // Arrange -- Create an initial output
-        $output = tempnam(sys_get_temp_dir(), 'docx_reprocess_') . '.docx';
+        $tempFile = tempnam(sys_get_temp_dir(), 'docx_reprocess_');
+        assert(is_string($tempFile));
+        $output = $tempFile . '.docx';
+        unlink($tempFile);
         $merger = new DocxMerger();
 
         $pass1 = $merger->merge(
@@ -138,7 +147,10 @@ describe('MergeOrchestrator reprocessing', function (): void {
 
     it('merges using previous output as base in reprocessing mode', function () use (&$output): void {
         // Arrange
-        $output = tempnam(sys_get_temp_dir(), 'docx_reprocess_') . '.docx';
+        $tempFile = tempnam(sys_get_temp_dir(), 'docx_reprocess_');
+        assert(is_string($tempFile));
+        $output = $tempFile . '.docx';
+        unlink($tempFile);
         $merger = new DocxMerger();
 
         // Pass 1: replace FIRST

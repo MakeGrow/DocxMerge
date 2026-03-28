@@ -55,12 +55,6 @@ parameters:
 			path: tests/Unit/Content/ContentExtractorTest.php
 
 		-
-			message: '#^Cannot access property \$paragraph on DocxMerge\\Dto\\MarkerLocation\|null\.$#'
-			identifier: property.nonObject
-			count: 8
-			path: tests/Unit/Marker/MarkerLocatorTest.php
-
-		-
 			message: '#^Cannot access property \$length on DOMNodeList\<DOMNameSpaceNode\|DOMNode\>\|false\.$#'
 			identifier: property.nonObject
 			count: 1

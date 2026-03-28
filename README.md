@@ -2,15 +2,15 @@
 
 [![CI](https://github.com/mkgrow/docx-merge/actions/workflows/ci.yml/badge.svg)](https://github.com/mkgrow/docx-merge/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![PHP 8.1+](https://img.shields.io/badge/PHP-8.1%2B-8892BF.svg)](https://www.php.net/)
+[![PHP 8.2+](https://img.shields.io/badge/PHP-8.2%2B-8892BF.svg)](https://www.php.net/)
 
-A framework-agnostic PHP 8.1+ Composer library that merges DOCX documents by substituting `${MARKER}` placeholders in a template with content extracted from source `.docx` files. Supports multi-section extraction, style deduplication, numbering resequencing, media copying, and header/footer merging -- all while maintaining valid OOXML document structure.
+A framework-agnostic PHP 8.2+ Composer library that merges DOCX documents by substituting `${MARKER}` placeholders in a template with content extracted from source `.docx` files. Supports multi-section extraction, style deduplication, numbering resequencing, media copying, and header/footer merging -- all while maintaining valid OOXML document structure.
 
 ## Requirements
 
 | Requirement | Version |
 | --- | --- |
-| PHP | >= 8.1 |
+| PHP | >= 8.2 |
 | ext-zip | * |
 | ext-dom | * |
 | ext-xml | * |
@@ -243,7 +243,7 @@ For complete architecture documentation, see [docs/system-design/](docs/system-d
 
 ### Prerequisites
 
-- PHP 8.1+ with extensions: zip, dom, xml, mbstring
+- PHP 8.2+ with extensions: zip, dom, xml, mbstring
 - Composer 2.x
 
 ### Setup
@@ -268,7 +268,7 @@ composer install
 
 ### Testing
 
-The test suite uses Pest v3 with 169 tests and 306 assertions, achieving 95.2% line coverage.
+The test suite uses Pest v3 with 182 tests and 357 assertions, achieving 95.2% line coverage.
 
 - **Unit tests** (`tests/Unit/`): Pure in-memory XML tests with no filesystem access.
 - **Integration tests** (`tests/Integration/`): Real `.docx` fixture-based tests using `tests/Integration/Fixtures/`.

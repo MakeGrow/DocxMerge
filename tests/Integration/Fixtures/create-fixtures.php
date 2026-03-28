@@ -23,6 +23,9 @@ declare(strict_types=1);
  *   template-fragmented.docx   -- ${CONTENT} split across 3 w:t elements
  *   source-empty.docx          -- Only sectPr, no content paragraphs
  *   source-with-photo.docx     -- Paragraph with image using non-standard filename (photo.png)
+ *   template-reprocessing.docx -- Two markers ${FIRST} and ${SECOND} for multi-pass reprocessing
+ *   template-custom-pattern.docx -- {{CONTENT}} marker with double-brace delimiters
+ *   source-reprocessing.docx   -- Identifiable content for reprocessing tests
  */
 
 $fixtureDir = __DIR__;
@@ -500,5 +503,57 @@ createDocx($fixtureDir . '/source-with-photo.docx', [
 ]);
 
 echo "Created: source-with-photo.docx\n";
+
+// -- 13. template-reprocessing.docx ------------------------------------------
+// Template with two markers for multi-pass reprocessing testing.
+// Pass 1 replaces ${FIRST}, pass 2 replaces ${SECOND}.
+
+$body = '<w:p><w:r><w:t>Before first marker</w:t></w:r></w:p>'
+    . '<w:p><w:r><w:t>${FIRST}</w:t></w:r></w:p>'
+    . '<w:p><w:r><w:t>Between markers</w:t></w:r></w:p>'
+    . '<w:p><w:r><w:t>${SECOND}</w:t></w:r></w:p>'
+    . '<w:p><w:r><w:t>After second marker</w:t></w:r></w:p>'
+    . finalSectPr();
+
+createDocx($fixtureDir . '/template-reprocessing.docx', [
+    '[Content_Types].xml' => buildContentTypes(),
+    '_rels/.rels' => buildRootRels(),
+    'word/document.xml' => buildDocumentXml($body),
+    'word/_rels/document.xml.rels' => buildDocumentRels(),
+    'word/styles.xml' => buildStyles(),
+]);
+
+echo "Created: template-reprocessing.docx\n";
+
+// -- 14. template-custom-pattern.docx ----------------------------------------
+// Template with {{CONTENT}} marker using double-brace delimiters.
+// Used for end-to-end custom marker pattern integration testing.
+
+$body = '<w:p><w:r><w:t>{{CONTENT}}</w:t></w:r></w:p>' . finalSectPr();
+
+createDocx($fixtureDir . '/template-custom-pattern.docx', [
+    '[Content_Types].xml' => buildContentTypes(),
+    '_rels/.rels' => buildRootRels(),
+    'word/document.xml' => buildDocumentXml($body),
+    'word/_rels/document.xml.rels' => buildDocumentRels(),
+    'word/styles.xml' => buildStyles(),
+]);
+
+echo "Created: template-custom-pattern.docx\n";
+
+// -- 15. source-reprocessing.docx --------------------------------------------
+// Source with identifiable content for reprocessing tests.
+
+$body = '<w:p><w:r><w:t>Reprocessing source content</w:t></w:r></w:p>' . finalSectPr();
+
+createDocx($fixtureDir . '/source-reprocessing.docx', [
+    '[Content_Types].xml' => buildContentTypes(),
+    '_rels/.rels' => buildRootRels(),
+    'word/document.xml' => buildDocumentXml($body),
+    'word/_rels/document.xml.rels' => buildDocumentRels(),
+    'word/styles.xml' => buildStyles(),
+]);
+
+echo "Created: source-reprocessing.docx\n";
 
 echo "\nAll fixtures created successfully.\n";

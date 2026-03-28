@@ -167,7 +167,7 @@ final class MergeOrchestrator
         ]);
 
         // --- Phase 1: Create working copy of the template ---
-        $tempPath = $this->createWorkingCopy($templatePath, $options);
+        $tempPath = $this->createWorkingCopy($templatePath, $outputPath, $options);
 
         $targetZip = new ZipArchive();
         $opened = false;
@@ -303,21 +303,23 @@ final class MergeOrchestrator
      *
      * If reprocessing mode is enabled and the output file already exists,
      * uses the existing output as the base instead of the original template.
+     * This enables multi-pass merging where each pass builds on previous results.
      *
      * @param string $templatePath Path to the original template.
+     * @param string $outputPath Path to the output file (used as base when reprocessing).
      * @param MergeOptions $options Merge options.
      *
      * @return string Path to the temporary working copy.
      *
-     * @throws InvalidTemplateException If the template file cannot be copied.
+     * @throws InvalidTemplateException If the source file does not exist or cannot be copied.
      */
-    private function createWorkingCopy(string $templatePath, MergeOptions $options): string
+    private function createWorkingCopy(string $templatePath, string $outputPath, MergeOptions $options): string
     {
         $sourcePath = $templatePath;
 
         // For reprocessing, use existing output as the base
-        if ($options->isReprocessing && file_exists($templatePath)) {
-            $sourcePath = $templatePath;
+        if ($options->isReprocessing && file_exists($outputPath)) {
+            $sourcePath = $outputPath;
         }
 
         if (!file_exists($sourcePath)) {

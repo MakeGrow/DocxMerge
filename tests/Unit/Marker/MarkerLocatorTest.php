@@ -31,6 +31,7 @@ describe('MarkerLocator', function (): void {
 
             // Assert
             expect($result)->toBeInstanceOf(MarkerLocation::class);
+            assert($result instanceof MarkerLocation);
             expect($result->paragraph->nodeName)->toBe('w:p');
         });
 
@@ -55,6 +56,7 @@ describe('MarkerLocator', function (): void {
 
             // Assert
             expect($result)->toBeInstanceOf(MarkerLocation::class);
+            assert($result instanceof MarkerLocation);
             expect($result->paragraph->nodeName)->toBe('w:p');
         });
 
@@ -153,8 +155,194 @@ describe('MarkerLocator', function (): void {
 
             // Assert
             expect($result)->toBeInstanceOf(MarkerLocation::class);
+            assert($result instanceof MarkerLocation);
             // The paragraph should contain the SECOND marker text
             expect($result->paragraph->textContent)->toContain('SECOND');
+        });
+
+        it('finds a marker with custom double-brace pattern', function (): void {
+            // Arrange
+            $locator = new MarkerLocator();
+            $dom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+                . '<w:body>'
+                . '<w:p><w:r><w:t>{{CONTENT}}</w:t></w:r></w:p>'
+                . '<w:sectPr/>'
+                . '</w:body></w:document>'
+            );
+
+            // Act
+            $result = $locator->locate($dom, 'CONTENT', '/\{\{([A-Z_]+)\}\}/');
+
+            // Assert
+            expect($result)->toBeInstanceOf(MarkerLocation::class);
+            assert($result instanceof MarkerLocation);
+            expect($result->paragraph->nodeName)->toBe('w:p');
+        });
+
+        it('finds a marker with custom bracket pattern', function (): void {
+            // Arrange
+            $locator = new MarkerLocator();
+            $dom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+                . '<w:body>'
+                . '<w:p><w:r><w:t>[[DATA]]</w:t></w:r></w:p>'
+                . '<w:sectPr/>'
+                . '</w:body></w:document>'
+            );
+
+            // Act
+            $result = $locator->locate($dom, 'DATA', '/\[\[([A-Z_]+)\]\]/');
+
+            // Assert
+            expect($result)->toBeInstanceOf(MarkerLocation::class);
+            assert($result instanceof MarkerLocation);
+            expect($result->paragraph->nodeName)->toBe('w:p');
+        });
+
+        it('finds a marker with custom percent pattern', function (): void {
+            // Arrange
+            $locator = new MarkerLocator();
+            $dom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+                . '<w:body>'
+                . '<w:p><w:r><w:t>%TITLE%</w:t></w:r></w:p>'
+                . '<w:sectPr/>'
+                . '</w:body></w:document>'
+            );
+
+            // Act
+            $result = $locator->locate($dom, 'TITLE', '/%([A-Z_]+)%/');
+
+            // Assert
+            expect($result)->toBeInstanceOf(MarkerLocation::class);
+            assert($result instanceof MarkerLocation);
+            expect($result->paragraph->nodeName)->toBe('w:p');
+        });
+
+        it('does not find a default-style marker when using a custom pattern', function (): void {
+            // Arrange
+            $locator = new MarkerLocator();
+            $dom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+                . '<w:body>'
+                . '<w:p><w:r><w:t>${CONTENT}</w:t></w:r></w:p>'
+                . '<w:sectPr/>'
+                . '</w:body></w:document>'
+            );
+
+            // Act
+            $result = $locator->locate($dom, 'CONTENT', '/\{\{([A-Z_]+)\}\}/');
+
+            // Assert
+            expect($result)->toBeNull();
+        });
+
+        it('finds a fragmented marker with custom pattern', function (): void {
+            // Arrange
+            $locator = new MarkerLocator();
+            $dom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+                . '<w:body>'
+                . '<w:p>'
+                . '<w:r><w:t>{{</w:t></w:r>'
+                . '<w:r><w:t>CONTENT</w:t></w:r>'
+                . '<w:r><w:t>}}</w:t></w:r>'
+                . '</w:p>'
+                . '<w:sectPr/>'
+                . '</w:body></w:document>'
+            );
+
+            // Act
+            $result = $locator->locate($dom, 'CONTENT', '/\{\{([A-Z_]+)\}\}/');
+
+            // Assert
+            expect($result)->toBeInstanceOf(MarkerLocation::class);
+            assert($result instanceof MarkerLocation);
+            expect($result->paragraph->nodeName)->toBe('w:p');
+        });
+
+        it('throws on invalid marker pattern', function (): void {
+            // Arrange
+            $locator = new MarkerLocator();
+            $dom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+                . '<w:body>'
+                . '<w:p><w:r><w:t>any text</w:t></w:r></w:p>'
+                . '<w:sectPr/>'
+                . '</w:body></w:document>'
+            );
+
+            // Act + Assert
+            expect(fn () => $locator->locate($dom, 'CONTENT', '/[invalid/'))
+                ->toThrow(\DocxMerge\Exception\MergeException::class);
+        });
+
+        it('throws when marker pattern has no capture group', function (): void {
+            // Arrange
+            $locator = new MarkerLocator();
+            $dom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+                . '<w:body>'
+                . '<w:p><w:r><w:t>{{CONTENT}}</w:t></w:r></w:p>'
+                . '<w:sectPr/>'
+                . '</w:body></w:document>'
+            );
+
+            // Act + Assert — pattern matches but has no capture group (index 1)
+            expect(fn () => $locator->locate($dom, 'CONTENT', '/\{\{[A-Z_]+\}\}/'))
+                ->toThrow(
+                    \DocxMerge\Exception\MergeException::class,
+                    'must define a capturing group',
+                );
+        });
+
+        it('finds the correct marker among multiple matches with custom pattern', function (): void {
+            // Arrange
+            $locator = new MarkerLocator();
+            $dom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+                . '<w:body>'
+                . '<w:p><w:r><w:t>{{FIRST}}</w:t></w:r></w:p>'
+                . '<w:p><w:r><w:t>{{SECOND}}</w:t></w:r></w:p>'
+                . '<w:sectPr/>'
+                . '</w:body></w:document>'
+            );
+
+            // Act
+            $result = $locator->locate($dom, 'SECOND', '/\{\{([A-Z_]+)\}\}/');
+
+            // Assert
+            expect($result)->toBeInstanceOf(MarkerLocation::class);
+            assert($result instanceof MarkerLocation);
+            expect($result->paragraph->textContent)->toContain('SECOND');
+        });
+
+        it('returns null when marker name does not match any capture group', function (): void {
+            // Arrange
+            $locator = new MarkerLocator();
+            $dom = createDomFromXml(
+                '<?xml version="1.0"?>'
+                . '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+                . '<w:body>'
+                . '<w:p><w:r><w:t>{{OTHER}}</w:t></w:r></w:p>'
+                . '<w:sectPr/>'
+                . '</w:body></w:document>'
+            );
+
+            // Act
+            $result = $locator->locate($dom, 'MISSING', '/\{\{([A-Z_]+)\}\}/');
+
+            // Assert
+            expect($result)->toBeNull();
         });
     });
 });

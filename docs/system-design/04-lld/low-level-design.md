@@ -53,7 +53,7 @@ final class MergeOrchestrator
         MergeOptions $options,
     ): MergeResult;
 
-    private function createWorkingCopy(string $templatePath, MergeOptions $options): string;
+    private function createWorkingCopy(string $templatePath, string $outputPath, MergeOptions $options): string;
     private function loadRequiredPart(ZipArchive $zip, string $partName, string $templatePath): DOMDocument;
     private function loadOptionalPart(ZipArchive $zip, string $partName): ?DOMDocument;
     private function createEmptyNumberingDom(): DOMDocument;
@@ -126,6 +126,8 @@ interface MarkerLocatorInterface
 5. If not found, return null.
 
 This algorithm handles fragmented markers where Word splits `${CONTENT}` across multiple `w:r`/`w:t` elements (e.g., `$`, `{CONTENT`, `}`).
+
+> **Note**: `MarkerLocator::locate()` returns `null` when the XPath query for `//w:p` fails (i.e., `DOMXPath::query()` returns `false`) or when the marker is not found, and throws `MergeException` only when the provided `$markerPattern` is not a valid PCRE pattern or lacks a required capture group. Callers should be prepared to handle both a `null` result and `MergeException` for invalid patterns.
 
 ### 1.5 ContentExtractor
 

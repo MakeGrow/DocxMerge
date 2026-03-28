@@ -7,7 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0] - 2026-03-27
+
+### Fixed
+
+- MarkerLocator::locate() now uses preg_match_all with the provided $markerPattern instead of hardcoded str_contains for ${...} delimiters, enabling custom marker patterns configured via MergeOptions (FR-01).
+- MergeOrchestrator::createWorkingCopy() now accepts $outputPath and uses the existing output file as the working copy base when isReprocessing is enabled, fixing the inert reprocessing logic.
+
+### Changed
+
+- Test suite expanded from 169 tests / 306 assertions to 182 tests / 357 assertions.
+
 ## [0.0.0-beta] - 2026-03-27
+
+### Changed
+
+- Minimum PHP version set to 8.2.
 
 ### Added
 
